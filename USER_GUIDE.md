@@ -121,9 +121,9 @@ Older notes that contain values such as `🔴 To Do`, `🟠 In Progress`, or `�
 
 The default values are also stored in Metadata Visuals' internal known-value registry so a fresh Editing Status group can regenerate the three rows even if the values are not yet used in notes.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 03 placeholder:</strong> Upload a defaults screenshot named <code>screenshots/default-editing-status-rules.png</code>. It should show the expanded <code>Editing Status</code> rule group with the three default rows: <code>To Do</code>, <code>In Progress</code>, and <code>Done</code>. Make sure the Shape, Colour, Icon, Name, Target, Preview, and Delete columns are visible.
-</div>
+<p align="center">
+  <img src="screenshots/default-editing-status-rules.png" alt="Metadata Visuals Editing Status rule group with To Do, In Progress, and Done rows." width="760">
+</p>
 
 ## The Rules Header
 
