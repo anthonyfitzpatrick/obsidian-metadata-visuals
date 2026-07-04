@@ -146,6 +146,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 			rules: savedSettings.rules,
 			smartFolders: savedSettings.smartFolders,
 			smartFolderFields: savedSettings.smartFolderFields,
+			allowedValues: savedSettings.allowedValues,
 		};
 	}
 
@@ -183,13 +184,18 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 * normalises old emoji-prefixed status defaults such as "🔴 To Do" into
 	 * "To Do", and supplies defaults for fields added after earlier releases:
 	 * colourFilename defaults to true, showIcon defaults to true, and target
-	 * defaults to "both". Smart folder field enablement is also backfilled for
-	 * older users who already had Editing Status rules before the per-field
-	 * smart-folder toggle existed.
+	 * defaults to "both". Smart folder field enablement and allowed value lists
+	 * are also backfilled for older users who already had Editing Status rules
+	 * before those settings existed.
 	 */
 	private parseSettings(data: unknown): MetadataLabelsSettings {
 		if (!this.isRecord(data) || !Array.isArray(data.rules)) {
-			return { rules: [], smartFolders: [], smartFolderFields: [] };
+			return {
+				rules: [],
+				smartFolders: [],
+				smartFolderFields: [],
+				allowedValues: {},
+			};
 		}
 
 		const rules = data.rules
@@ -214,6 +220,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 			smartFolderFields: Array.isArray(data.smartFolderFields)
 				? data.smartFolderFields.filter((field): field is string => typeof field === 'string')
 				: this.getDefaultSmartFolderFields(rules),
+			allowedValues: this.parseAllowedValues(data.allowedValues, rules),
 		};
 	}
 
@@ -284,6 +291,72 @@ export default class MetadataLabelsPlugin extends Plugin {
 		return rules.some((rule) => rule.field === 'Editing Status')
 			? ['Editing Status']
 			: [];
+	}
+
+	/**
+	 * Migrates persisted per-field allowed value lists.
+	 *
+	 * Values are normalised and deduplicated during load so the settings UI can
+	 * trust this plugin-owned vocabulary. When older data has Editing Status
+	 * rules but no allowed values map, the standard workflow values are seeded.
+	 */
+	private parseAllowedValues(
+		value: unknown,
+		rules: MetadataLabelRule[],
+	): Record<string, string[]> {
+		const allowedValues: Record<string, string[]> = {};
+
+		if (this.isRecord(value)) {
+			for (const [field, values] of Object.entries(value)) {
+				if (!Array.isArray(values)) {
+					continue;
+				}
+
+				allowedValues[field] = this.sortMetadataValues(
+					Array.from(new Set(
+						values
+							.filter((allowedValue): allowedValue is string => typeof allowedValue === 'string')
+							.map((allowedValue) => this.normalizeStatusValue(allowedValue))
+							.filter((allowedValue) => allowedValue !== ''),
+					)),
+				);
+			}
+		}
+
+		if (!allowedValues['Editing Status'] && rules.some((rule) => rule.field === 'Editing Status')) {
+			allowedValues['Editing Status'] = ['To Do', 'In Progress', 'Done'];
+		}
+
+		return allowedValues;
+	}
+
+	/**
+	 * Keeps workflow values in their natural order and sorts all other values
+	 * alphabetically. This mirrors the settings UI ordering.
+	 */
+	private sortMetadataValues(values: string[]): string[] {
+		const workflowValueOrder = ['To Do', 'In Progress', 'Done'];
+
+		return values.sort((a, b) => {
+			const workflowIndexA = workflowValueOrder.indexOf(a);
+			const workflowIndexB = workflowValueOrder.indexOf(b);
+			const hasWorkflowA = workflowIndexA >= 0;
+			const hasWorkflowB = workflowIndexB >= 0;
+
+			if (hasWorkflowA && hasWorkflowB) {
+				return workflowIndexA - workflowIndexB;
+			}
+
+			if (hasWorkflowA) {
+				return -1;
+			}
+
+			if (hasWorkflowB) {
+				return 1;
+			}
+
+			return a.localeCompare(b);
+		});
 	}
 
 	/**

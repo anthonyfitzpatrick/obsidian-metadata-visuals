@@ -33,12 +33,15 @@ export interface MetadataLabelRule {
  * smartFolderFields stores metadata fields whose rule groups have "Apply to
  * enabled folders" turned on in settings. Both lists are needed: one answers
  * "which folders?" and the other answers "which metadata field should drive
- * inheritance for those folders?"
+ * inheritance for those folders?" allowedValues stores this plugin's own
+ * per-field value vocabulary so Metadata Labels does not depend on Metadata
+ * Menu or on values already present in note frontmatter.
  */
 export interface MetadataLabelsSettings {
 	rules: MetadataLabelRule[];
 	smartFolders: string[];
 	smartFolderFields: string[];
+	allowedValues: Record<string, string[]>;
 }
 
 /**
@@ -48,6 +51,7 @@ export const DEFAULT_SETTINGS: MetadataLabelsSettings = {
 	rules: [],
 	smartFolders: [],
 	smartFolderFields: [],
+	allowedValues: {},
 };
 
 /**

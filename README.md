@@ -2,6 +2,8 @@
 
 Metadata Labels is an Obsidian plugin that turns frontmatter metadata into visual labels in the File Explorer. It is designed for writing projects where notes need Scrivener-style status markers such as `To Do`, `In Progress`, and `Done`.
 
+The plugin is standalone at runtime. It can optionally import field definitions from known local sources, then stores the imported field names and possible values in its own settings so the source plugin is not needed afterwards.
+
 The plugin keeps the actual metadata value clean. A note can store:
 
 ```yaml
@@ -20,7 +22,8 @@ The icon shape, icon colour, filename colour, and note/folder target behaviour a
 - Provides default Editing Status rules for `To Do`, `In Progress`, and `Done`.
 - Groups settings by metadata field in a compact table UI.
 - Uses a field selector based on existing vault frontmatter fields.
-- Uses a value selector based on existing values for the selected metadata field.
+- Stores imported per-field possible values inside Metadata Labels itself.
+- Uses a value selector based on imported possible values and values already found in note frontmatter.
 - Supports smart folder inheritance for enabled folders.
 - Adds context-menu actions for bulk metadata updates across selected notes and folders.
 - Normalises legacy emoji-prefixed values such as `🔴 To Do`, `🟠 In Progress`, and `🟢 Done`.
@@ -71,7 +74,18 @@ Each rule stores:
 
 The first matching note rule is applied to a note. Rules targeted only at folders are skipped for note matching.
 
-In settings, both metadata fields and rule values are selected from values already found in the vault. For example, if the `Editing Status` field currently contains `To Do`, `In Progress`, and `Done`, those are the selectable values for that group. Typed values that are not present for the selected field are rejected.
+In settings, metadata fields are selected from fields already found in the vault plus fields imported into Metadata Labels' own value registry. Rule values come from a merged list of imported possible values and values already found in note frontmatter.
+
+The `Import field definitions` button looks for supported local field-definition data, imports field names and configured possible values, and saves them into Metadata Labels' own `data.json`. After that one-time import, Metadata Labels does not require the source plugin or definition file to remain installed. If no external definitions are found, the plugin falls back to values already used in notes.
+
+The default setup flow is:
+
+1. Optional: click `Import field definitions` if you have configured possible values in a supported source.
+2. Select a metadata field in the Add rule area.
+3. Click `Add rule`.
+4. Metadata Labels creates one row for every known value, combining imported possible values and values already used in frontmatter.
+
+If a rule group already exists, use `Add missing rows` to add rows for imported or discovered values that are not yet in the table. Typed row values that are not in the imported/discovered value list are rejected, keeping rule values consistent with known metadata values.
 
 Values are compared after normalisation. This preserves compatibility with older notes that may have stored status emoji in the metadata value. For example, all of these can match a rule value of `To Do`:
 
@@ -89,6 +103,8 @@ If there are no useful rules, the settings tab seeds three default rules:
 - `Editing Status = Done`, icon `circle`, colour `#2f9e44`
 
 These defaults store clean raw values. The colour and icon are display settings, not part of the metadata value.
+
+The default Editing Status group also creates allowed values for `To Do`, `In Progress`, and `Done`, so those values are available even before every status appears in note frontmatter.
 
 ## Smart Folder Rules
 

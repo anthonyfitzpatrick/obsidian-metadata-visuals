@@ -3,6 +3,7 @@ import {
 	ColorComponent,
 	DropdownComponent,
 	ExtraButtonComponent,
+	Notice,
 	PluginSettingTab,
 	Setting,
 	setIcon,
@@ -40,6 +41,13 @@ const TARGET_OPTIONS: Record<MetadataLabelRuleTarget, string> = {
 	both: 'Both',
 };
 
+const WORKFLOW_VALUE_ORDER = ['To Do', 'In Progress', 'Done'];
+const WORKFLOW_VALUE_COLORS: Record<string, string> = {
+	'To Do': '#e03131',
+	'In Progress': '#f08c00',
+	Done: '#2f9e44',
+};
+
 interface FieldSelector {
 	inputEl: HTMLInputElement;
 	value: string;
@@ -70,10 +78,12 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	 */
 	display(): void {
 		const { containerEl } = this;
-		const fields = this.getFrontmatterFields();
 
 		this.normalizeRuleValues();
+		this.normalizeAllowedValues();
 		this.ensureDefaultRules();
+
+		const fields = this.getKnownMetadataFields();
 
 		containerEl.empty();
 
@@ -98,7 +108,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 
 		new Setting(actionsEl)
 			.setName('Rules')
-			.setDesc('Create a label group from an existing frontmatter field.')
+			.setDesc('Create a label group from a known metadata field.')
 			.addText((text) => {
 				this.configureFieldSelector(
 					text,
@@ -113,6 +123,14 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 				);
 			})
 			.addButton((button) => {
+				button
+					.setButtonText('Import field definitions')
+					.onClick(async () => {
+						await this.importFieldDefinitions();
+						this.display();
+					});
+			})
+			.addButton((button) => {
 				addRuleButtonEl = button.buttonEl;
 				addRuleButtonEl.disabled = selectedNewField === '';
 				button
@@ -122,12 +140,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 							return;
 						}
 
-						this.plugin.settings.rules.push(
-							this.createRuleForField(
-								selectedNewField,
-								this.getFrontmatterValues(selectedNewField)[0] ?? '',
-							),
-						);
+						this.plugin.settings.rules.push(...this.createRulesForFieldValues(selectedNewField));
 						await this.plugin.saveSettings();
 						this.display();
 					});
@@ -160,7 +173,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		});
 		const fieldInput = new TextComponent(titleEl);
 
-		this.configureFieldSelector(fieldInput, field, this.getFrontmatterFields(), async (value) => {
+		this.configureFieldSelector(fieldInput, field, this.getKnownMetadataFields(), async (value) => {
 			for (const rule of rules) {
 				rule.field = value;
 			}
@@ -192,10 +205,19 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			})
 			.addButton((button) => {
 				button
+					.setButtonText('Add missing rows')
+					.onClick(async () => {
+						this.addMissingRowsForField(field, rules);
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			})
+			.addButton((button) => {
+				button
 					.setButtonText('Add row')
 					.onClick(async () => {
 						this.plugin.settings.rules.push(
-							this.createRuleForField(field, this.getFrontmatterValues(field)[0] ?? ''),
+							this.createRuleForField(field, this.getRuleValuesForField(field)[0] ?? ''),
 						);
 						await this.plugin.saveSettings();
 						this.display();
@@ -221,15 +243,15 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		const tableEl = groupEl.createDiv('metadata-labels-rule-table');
 		const tableHeaderEl = tableEl.createDiv('metadata-labels-rule-table-header');
 
-		for (const label of ['Value', 'Shape', 'Colour', 'Icon', 'Name', 'Target', 'Preview', 'Del']) {
+		for (const label of ['Value', 'Shape', 'Colour', 'Icon', 'Name', 'Target', 'Preview', 'Order', 'Del']) {
 			tableHeaderEl.createDiv({
 				cls: 'metadata-labels-rule-table-heading',
 				text: label,
 			});
 		}
 
-		for (const rule of rules) {
-			this.renderRule(tableEl, rule);
+		for (const [index, rule] of rules.entries()) {
+			this.renderRule(tableEl, rule, rules, index);
 		}
 	}
 
@@ -241,7 +263,12 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	 * the same icon and filename-colour toggles so the user can see the File
 	 * Explorer effect before matching any note.
 	 */
-	private renderRule(tableEl: HTMLElement, rule: MetadataLabelRule): void {
+	private renderRule(
+		tableEl: HTMLElement,
+		rule: MetadataLabelRule,
+		rules: MetadataLabelRule[],
+		index: number,
+	): void {
 		const rowEl = tableEl.createDiv('metadata-labels-rule-table-row');
 		const valueEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-value-cell');
 		const iconEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-icon-cell');
@@ -250,6 +277,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		const colourNameEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-colour-name-cell');
 		const targetEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-target-cell');
 		const previewEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-preview-cell');
+		const orderEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-order-cell');
 		const deleteEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-delete-cell');
 		const previewIconEl = previewEl.createSpan('metadata-labels-rule-preview-icon');
 		const previewTextEl = previewEl.createSpan({
@@ -264,18 +292,25 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		colourNameEl.setAttribute('data-label', 'Name');
 		targetEl.setAttribute('data-label', 'Target');
 		previewEl.setAttribute('data-label', 'Preview');
+		orderEl.setAttribute('data-label', 'Order');
 		deleteEl.setAttribute('data-label', 'Del');
 
 		this.updatePreview(previewIconEl, previewTextEl, rule);
 
 		const valueInput = new TextComponent(valueEl);
+		const valueDisplayEl = valueEl.createDiv({
+			cls: 'metadata-labels-value-display',
+			text: rule.value || 'New label',
+		});
 
 		valueInput.inputEl.setAttribute('aria-label', 'Metadata value');
-		this.configureValueSelector(valueInput, rule, this.getFrontmatterValues(rule.field), async (value) => {
+		this.configureValueSelector(valueInput, rule, this.getRuleValuesForField(rule.field), async (value) => {
 			rule.value = value;
+			valueDisplayEl.setText(value || 'New label');
 			this.updatePreview(previewIconEl, previewTextEl, rule);
 			await this.plugin.saveSettings();
 		});
+		valueDisplayEl.setText(rule.value || 'New label');
 		this.updatePreview(previewIconEl, previewTextEl, rule);
 
 		const iconDropdown = new DropdownComponent(iconEl);
@@ -355,6 +390,32 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			});
 
+		const moveUpButton = new ExtraButtonComponent(orderEl)
+			.setIcon('arrow-up');
+		this.configureRowOrderButton(
+			moveUpButton,
+			index === 0,
+			'Move rule up',
+			async () => {
+				this.moveRuleWithinGroup(rules, index, -1);
+				await this.plugin.saveSettings();
+				this.display();
+			},
+		);
+
+		const moveDownButton = new ExtraButtonComponent(orderEl)
+			.setIcon('arrow-down');
+		this.configureRowOrderButton(
+			moveDownButton,
+			index >= rules.length - 1,
+			'Move rule down',
+			async () => {
+				this.moveRuleWithinGroup(rules, index, 1);
+				await this.plugin.saveSettings();
+				this.display();
+			},
+		);
+
 		const deleteButton = new ExtraButtonComponent(deleteEl);
 
 		deleteButton.extraSettingsEl.setAttribute('aria-label', 'Delete rule');
@@ -371,6 +432,59 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 				this.display();
 		});
+	}
+
+	/**
+	 * Configures an order button while keeping Obsidian 1.12.7 compatibility.
+	 *
+	 * ExtraButtonComponent did not expose a stable disabled API in older
+	 * versions, so disabled edge buttons are visually muted and marked with
+	 * aria-disabled. Click handlers are only registered for active buttons.
+	 */
+	private configureRowOrderButton(
+		button: ExtraButtonComponent,
+		disabled: boolean,
+		label: string,
+		onClick: () => Promise<void>,
+	): void {
+		button.extraSettingsEl.setAttribute('aria-label', label);
+		button.extraSettingsEl.setAttribute('title', label);
+		button.extraSettingsEl.toggleClass('is-disabled', disabled);
+		button.extraSettingsEl.setAttribute('aria-disabled', String(disabled));
+
+		if (!disabled) {
+			button.onClick(onClick);
+		}
+	}
+
+	/**
+	 * Moves one rule within its metadata-field group by swapping the underlying
+	 * entries in plugin.settings.rules.
+	 *
+	 * The matcher already respects settings order, so persisting the reordered
+	 * array is enough for both immediate preview redraws and restart persistence.
+	 */
+	private moveRuleWithinGroup(
+		rules: MetadataLabelRule[],
+		index: number,
+		direction: -1 | 1,
+	): void {
+		const targetRule = rules[index + direction];
+		const currentRule = rules[index];
+
+		if (!currentRule || !targetRule) {
+			return;
+		}
+
+		const currentIndex = this.plugin.settings.rules.indexOf(currentRule);
+		const targetIndex = this.plugin.settings.rules.indexOf(targetRule);
+
+		if (currentIndex < 0 || targetIndex < 0) {
+			return;
+		}
+
+		this.plugin.settings.rules[currentIndex] = targetRule;
+		this.plugin.settings.rules[targetIndex] = currentRule;
 	}
 
 	/**
@@ -539,6 +653,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			this.createEditingStatusRule('In Progress', '#f08c00'),
 			this.createEditingStatusRule('Done', '#2f9e44'),
 		);
+		this.plugin.settings.allowedValues['Editing Status'] = ['To Do', 'In Progress', 'Done'];
 
 		void this.plugin.saveSettings();
 	}
@@ -583,9 +698,80 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			field,
 			value,
 			icon: 'circle',
+			color: WORKFLOW_VALUE_COLORS[value] ?? createDefaultRule().color,
+			colourFilename: true,
 			showIcon: true,
 			target: 'both',
 		};
+	}
+
+	/**
+	 * Creates a complete new rule group from every known value for a field.
+	 *
+	 * Add rule is intentionally broader than Add row: when a user chooses a
+	 * metadata field, the settings page starts with rows for configured values
+	 * and values already seen in frontmatter. If no values exist yet, the method
+	 * preserves the old behaviour by returning one blank row.
+	 */
+	private createRulesForFieldValues(field: string): MetadataLabelRule[] {
+		const values = this.getRuleValuesForField(field);
+
+		if (values.length === 0) {
+			return [this.createRuleForField(field)];
+		}
+
+		return values.map((value) => this.createRuleForField(field, value));
+	}
+
+	/**
+	 * Adds rows for known values that are not already represented by the field's
+	 * rule table.
+	 *
+	 * Known values include both imported/plugin-owned potential values and
+	 * values discovered in frontmatter. This lets a field use values that have
+	 * not appeared in notes yet while still remaining useful without an import.
+	 */
+	private addMissingRowsForField(field: string, rules: MetadataLabelRule[]): void {
+		const existingValues = new Set(
+			rules.map((rule) => this.normalizeStatusValue(rule.value)),
+		);
+
+		for (const value of this.getRuleValuesForField(field)) {
+			if (!existingValues.has(value)) {
+				this.plugin.settings.rules.push(this.createRuleForField(field, value));
+				existingValues.add(value);
+			}
+		}
+	}
+
+	/**
+	 * Returns the values available for rule rows under a field.
+	 *
+	 * Plugin-owned registry values and discovered frontmatter values are merged.
+	 * The registry is populated by first-run defaults, migrations, and optional
+	 * one-time imports from external field-definition files. Once imported, the
+	 * plugin no longer needs the source plugin or file to remain installed.
+	 */
+	private getRuleValuesForField(field: string): string[] {
+		return this.sortMetadataValues(this.deduplicateValues([
+			...this.getConfiguredValuesForField(field),
+			...this.getFrontmatterValues(field),
+		]).filter((value) => value !== ''));
+	}
+
+	/**
+	 * Returns non-empty configured potential values for a field.
+	 */
+	private getConfiguredValuesForField(field: string): string[] {
+		return this.getAllowedValues(field)
+			.filter((value) => value !== '');
+	}
+
+	/**
+	 * Returns the plugin-owned allowed values for a field.
+	 */
+	private getAllowedValues(field: string): string[] {
+		return this.plugin.settings.allowedValues[field] ?? [];
 	}
 
 	/**
@@ -620,6 +806,185 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		}
 
 		return 'both';
+	}
+
+	/**
+	 * Builds the metadata-field selector source.
+	 *
+	 * Core Obsidian only knows fields already used in notes, while Metadata
+	 * Labels can also know imported field definitions. Merging both sources lets
+	 * Add rule offer fields whose possible values were imported but are not yet
+	 * present in any note frontmatter.
+	 */
+	private getKnownMetadataFields(): string[] {
+		const fields = new Set<string>(this.getFrontmatterFields());
+
+		for (const field of Object.keys(this.plugin.settings.allowedValues)) {
+			const normalizedField = field.trim();
+
+			if (normalizedField) {
+				fields.add(normalizedField);
+			}
+		}
+
+		return Array.from(fields).sort((a, b) => a.localeCompare(b));
+	}
+
+	/**
+	 * Imports external field definitions into this plugin's own value registry.
+	 *
+	 * The import is deliberately one-time and optional. Metadata Labels reads
+	 * known local definition files when they are available, copies field names
+	 * and configured values into its own data.json, and then operates
+	 * independently from that point onward.
+	 */
+	private async importFieldDefinitions(): Promise<void> {
+		const definitions = await this.readMetadataMenuFieldDefinitions();
+
+		if (definitions.size === 0) {
+			new Notice('No external field definitions found. Only values already used in notes can be discovered.');
+			return;
+		}
+
+		let changed = false;
+		let importedValueCount = 0;
+
+		for (const [field, values] of definitions) {
+			importedValueCount += values.length;
+
+			const existingValues = this.plugin.settings.allowedValues[field] ?? [];
+			const mergedValues = this.sortMetadataValues(
+				this.deduplicateValues([...existingValues, ...values])
+					.filter((value) => value !== ''),
+			);
+			const shouldStoreField = !(field in this.plugin.settings.allowedValues)
+				|| existingValues.join('\u0000') !== mergedValues.join('\u0000');
+
+			if (shouldStoreField) {
+				this.plugin.settings.allowedValues[field] = mergedValues;
+				changed = true;
+			}
+		}
+
+		if (changed) {
+			await this.plugin.saveSettings();
+		}
+
+		new Notice(`Imported ${definitions.size} fields and ${importedValueCount} values.`);
+	}
+
+	/**
+	 * Reads Metadata Menu's data file when it exists and extracts preset fields.
+	 *
+	 * This is an import adapter, not a runtime dependency. The code uses only
+	 * Obsidian's vault adapter and defensive JSON parsing so the plugin remains
+	 * compatible with Obsidian 1.12.7 and continues to work if Metadata Menu is
+	 * absent, disabled, or later removed.
+	 */
+	private async readMetadataMenuFieldDefinitions(): Promise<Map<string, string[]>> {
+		const definitionsPaths = Array.from(new Set([
+			`${this.app.vault.configDir}/plugins/metadata-menu/data.json`,
+			['.obsidian', 'plugins', 'metadata-menu', 'data.json'].join('/'),
+		]));
+
+		for (const definitionsPath of definitionsPaths) {
+			if (!(await this.app.vault.adapter.exists(definitionsPath))) {
+				continue;
+			}
+
+			try {
+				return this.parseMetadataMenuData(
+					JSON.parse(await this.app.vault.adapter.read(definitionsPath)) as unknown,
+				);
+			} catch {
+				return new Map();
+			}
+		}
+
+		return new Map();
+	}
+
+	/**
+	 * Extracts field names and configured value lists from Metadata Menu data.
+	 *
+	 * The inspected Metadata Menu data.json stores an array at presetFields. Each
+	 * field has a name, and Select fields store their configured possible values
+	 * in options.valuesList as an object whose numeric string keys preserve the
+	 * configured order. This parser supports that structure directly and ignores
+	 * malformed entries so a bad external data file cannot corrupt Metadata
+	 * Labels settings.
+	 */
+	private parseMetadataMenuData(data: unknown): Map<string, string[]> {
+		const definitions = new Map<string, string[]>();
+
+		if (!this.isRecord(data) || !Array.isArray(data.presetFields)) {
+			return definitions;
+		}
+
+		for (const presetField of data.presetFields) {
+			if (!this.isRecord(presetField) || typeof presetField.name !== 'string') {
+				continue;
+			}
+
+			const field = presetField.name.trim();
+
+			if (!field) {
+				continue;
+			}
+
+			definitions.set(
+				field,
+				this.sortMetadataValues(
+					this.deduplicateValues(this.getMetadataMenuValues(presetField))
+						.filter((value) => value !== ''),
+				),
+			);
+		}
+
+		return definitions;
+	}
+
+	/**
+	 * Returns configured possible values from a Metadata Menu preset field.
+	 *
+	 * The actual Metadata Menu file in this vault uses:
+	 *
+	 * options: {
+	 *   sourceType: "ValuesList",
+	 *   valuesList: { "1": "First Draft", "2": "Published" }
+	 * }
+	 *
+	 * Sorting by numeric keys keeps values such as Editing Stage in the order
+	 * configured by the source before they are copied into Metadata Labels.
+	 */
+	private getMetadataMenuValues(presetField: Record<string, unknown>): string[] {
+		const options = presetField.options;
+
+		if (!this.isRecord(options)) {
+			return [];
+		}
+
+		const valuesList = options.valuesList;
+
+		if (Array.isArray(valuesList)) {
+			return valuesList.filter((value): value is string => typeof value === 'string');
+		}
+
+		if (this.isRecord(valuesList)) {
+			return Object.entries(valuesList)
+				.sort(([keyA], [keyB]) => Number(keyA) - Number(keyB))
+				.map(([, value]) => value)
+				.filter((value): value is string => typeof value === 'string');
+		}
+
+		return [];
+	}
+
+	/**
+	 * Narrowing helper for parsed JSON data from optional external sources.
+	 */
+	private isRecord(value: unknown): value is Record<string, unknown> {
+		return typeof value === 'object' && value !== null;
 	}
 
 	/**
@@ -668,7 +1033,36 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			}
 		}
 
-		return Array.from(values).sort((a, b) => a.localeCompare(b));
+		return this.sortMetadataValues(Array.from(values));
+	}
+
+	/**
+	 * Sorts field values for predictable rule generation and selector display.
+	 *
+	 * Common workflow statuses are promoted to the top in the same order writers
+	 * expect to see them, while every other value remains alphabetical.
+	 */
+	private sortMetadataValues(values: string[]): string[] {
+		return values.sort((a, b) => {
+			const workflowIndexA = WORKFLOW_VALUE_ORDER.indexOf(a);
+			const workflowIndexB = WORKFLOW_VALUE_ORDER.indexOf(b);
+			const hasWorkflowA = workflowIndexA >= 0;
+			const hasWorkflowB = workflowIndexB >= 0;
+
+			if (hasWorkflowA && hasWorkflowB) {
+				return workflowIndexA - workflowIndexB;
+			}
+
+			if (hasWorkflowA) {
+				return -1;
+			}
+
+			if (hasWorkflowB) {
+				return 1;
+			}
+
+			return a.localeCompare(b);
+		});
 	}
 
 	/**
@@ -738,6 +1132,69 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		if (changed) {
 			void this.plugin.saveSettings();
 		}
+	}
+
+	/**
+	 * Cleans all plugin-owned allowed values before rendering controls.
+	 *
+	 * This keeps data.json standalone and predictable: values are normalised,
+	 * duplicates are removed, and default Editing Status values are added when
+	 * needed for existing Editing Status rule groups.
+	 */
+	private normalizeAllowedValues(): void {
+		let changed = false;
+
+		for (const [field, values] of Object.entries(this.plugin.settings.allowedValues)) {
+			const normalizedValues = this.deduplicateValues(values);
+
+			if (values.join('\u0000') !== normalizedValues.join('\u0000')) {
+				this.plugin.settings.allowedValues[field] = normalizedValues;
+				changed = true;
+			}
+		}
+
+		if (
+			this.plugin.settings.rules.some((rule) => rule.field === 'Editing Status')
+			&& !this.plugin.settings.allowedValues['Editing Status']
+		) {
+			this.plugin.settings.allowedValues['Editing Status'] = ['To Do', 'In Progress', 'Done'];
+			changed = true;
+		}
+
+		if (changed) {
+			void this.plugin.saveSettings();
+		}
+	}
+
+	/**
+	 * Normalises and deduplicates value lists while preserving input order.
+	 *
+	 * Blank values are kept only for callers that are working with an active
+	 * placeholder row. Rule generation and imports filter blanks back out before
+	 * saving registry values.
+	 */
+	private deduplicateValues(values: string[]): string[] {
+		const deduplicatedValues: string[] = [];
+		let hasBlankValue = false;
+
+		for (const value of values) {
+			const normalizedValue = this.normalizeStatusValue(value);
+
+			if (!normalizedValue) {
+				hasBlankValue = true;
+				continue;
+			}
+
+			if (!deduplicatedValues.includes(normalizedValue)) {
+				deduplicatedValues.push(normalizedValue);
+			}
+		}
+
+		if (hasBlankValue) {
+			deduplicatedValues.push('');
+		}
+
+		return deduplicatedValues;
 	}
 
 	/**
