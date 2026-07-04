@@ -369,9 +369,9 @@ The footer buttons are:
 
 `Buy me a coffee` is visually highlighted. All links open in the system browser.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 13 placeholder:</strong> Upload a footer screenshot named <code>screenshots/about-support-footer.png</code>. It should show the bottom of Settings -&gt; Metadata Visuals with the official logo, <code>Metadata Visuals</code> title, version number, <code>Created by Anthony Fitzpatrick</code>, <code>Wolf 359 Press AB</code>, and the five support buttons in this exact order: <code>Report a bug</code>, <code>Feature request</code>, <code>wolf359.app</code>, <code>Wolf 359 Press</code>, <code>Buy me a coffee</code>. Capture it in a clean theme where the logo and buttons are readable.
-</div>
+<p align="center">
+  <img src="screenshots/about-support-footer.png" alt="Metadata Visuals About and Support footer with logo, version, creator credit, and support buttons." width="760">
+</p>
 
 ## Value Normalisation
 
