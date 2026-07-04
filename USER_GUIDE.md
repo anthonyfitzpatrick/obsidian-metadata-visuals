@@ -226,9 +226,9 @@ This feature does not depend on `Use for File Explorer`. A group can colour Prop
 
 If you turn `Colour note metadata` off, Metadata Visuals removes its injected property colours.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 08 placeholder:</strong> Upload a Properties screenshot named <code>screenshots/coloured-note-properties.png</code>. It should show an open note with the Properties panel visible and multiple coloured values, for example <code>Editing Status: To Do</code>, <code>Editing Stage: Published</code>, and <code>Importance: Critical</code>. The File Explorer can be visible too, but the coloured Properties values should be the focus.
-</div>
+<p align="center">
+  <img src="screenshots/coloured-note-properties.png" alt="Obsidian Properties panel showing Metadata Visuals coloured property values." width="560">
+</p>
 
 ## Smart Folders
 
