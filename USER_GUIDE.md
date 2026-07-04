@@ -328,7 +328,7 @@ Existing frontmatter is preserved as YAML data. Notes without frontmatter receiv
   <br>
   <br>
   <p><strong>After</strong></p>
-  <img src="screenshots/bulk-metadata-update-menu-after.png" alt="After bulk update: selected notes show updated Metadata Visuals icons and colours in the File Explorer." width="870">
+  <img src="screenshots/bulk-metadata-update-menu-after.png" alt="After bulk update: selected notes show updated Metadata Visuals icons and colours in the File Explorer." width="435">
 </div>
 
 ## Field Definition Import
