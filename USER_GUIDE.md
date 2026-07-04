@@ -14,7 +14,9 @@ Importance: Critical
 
 The plugin then displays configured colours and icons in the File Explorer, in folder rows, and in the visible note Properties panel.
 
-> Screenshot placeholder: Upload a high-level screenshot named `screenshots/metadata-labels-overview.png`. It should show Obsidian with the File Explorer visible on the left, several notes using Metadata Labels icons/coloured names, and an open note showing coloured Properties values at the top. Use a small sample vault with non-private note names so the screenshot is safe for public documentation.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 01 placeholder:</strong> Upload a high-level screenshot named <code>screenshots/metadata-labels-overview.png</code>. It should show Obsidian with the File Explorer visible on the left, several notes using Metadata Labels icons/coloured names, and an open note showing coloured Properties values at the top. Use a small sample vault with non-private note names so the screenshot is safe for public documentation.
+</div>
 
 ## Core Concepts
 
@@ -68,7 +70,9 @@ Metadata/property colouring is different: it can use all matching rule groups.
 
 Metadata Labels creates rows from available values for the selected field. It can use values already found in your notes and values imported from known field-definition sources.
 
-> Screenshot placeholder: Upload a setup screenshot named `screenshots/settings-add-rule.png`. It should show Settings -> Metadata Labels with the Rules header visible, the `Colour note metadata` toggle, the `Select` field open or ready to select a metadata field, and the `Add rule` button. Capture the clean compact Add Rule area without private vault content.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 02 placeholder:</strong> Upload a setup screenshot named <code>screenshots/settings-add-rule.png</code>. It should show Settings -&gt; Metadata Labels with the Rules header visible, the <code>Colour note metadata</code> toggle, the <code>Select</code> field open or ready to select a metadata field, and the <code>Add rule</code> button. Capture the clean compact Add Rule area without private vault content.
+</div>
 
 ## Default Editing Status Rules
 
@@ -84,7 +88,9 @@ These defaults store clean metadata values. Emoji are not stored in the rule val
 
 Older notes that contain values such as `🔴 To Do`, `🟠 In Progress`, or `🟢 Done` still match because Metadata Labels normalises leading status emoji before comparing values.
 
-> Screenshot placeholder: Upload a defaults screenshot named `screenshots/default-editing-status-rules.png`. It should show the expanded `Editing Status` rule group with the three default rows: `To Do`, `In Progress`, and `Done`. Make sure the Shape, Colour, Icon, Name, Target, Preview, and Delete columns are visible.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 03 placeholder:</strong> Upload a defaults screenshot named <code>screenshots/default-editing-status-rules.png</code>. It should show the expanded <code>Editing Status</code> rule group with the three default rows: <code>To Do</code>, <code>In Progress</code>, and <code>Done</code>. Make sure the Shape, Colour, Icon, Name, Target, Preview, and Delete columns are visible.
+</div>
 
 ## The Rules Header
 
@@ -98,7 +104,9 @@ The field selector starts blank. `Add rule` remains disabled until a real field 
 
 When you click `Add rule`, Metadata Labels first tries to import known field definitions in the background. If no definitions are found, it uses values already found in note frontmatter.
 
-> Screenshot placeholder: Upload a field selector screenshot named `screenshots/add-rule-field-selector.png`. It should show the Add Rule `Select` input with the dropdown/list of available metadata fields visible. Include examples such as `Editing Status`, `Editing Stage`, and `Importance` if they are available in the sample vault.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 04 placeholder:</strong> Upload a field selector screenshot named <code>screenshots/add-rule-field-selector.png</code>. It should show the Add Rule <code>Select</code> input with the dropdown/list of available metadata fields visible. Include examples such as <code>Editing Status</code>, <code>Editing Stage</code>, and <code>Importance</code> if they are available in the sample vault.
+</div>
 
 ## Rule Group Header
 
@@ -115,7 +123,9 @@ Click the header to collapse or expand the group. Collapsed state is saved and r
 
 The metadata field name is read-only. Field selection happens only when creating a new rule group.
 
-> Screenshot placeholder: Upload a collapsed-group screenshot named `screenshots/collapsed-rule-group.png`. It should show one collapsed rule group header with the chevron, bold metadata field name, label count, `Use for File Explorer`, `Apply to enabled folders`, and `Delete rule` button all visible in the same row.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 05 placeholder:</strong> Upload a collapsed-group screenshot named <code>screenshots/collapsed-rule-group.png</code>. It should show one collapsed rule group header with the chevron, bold metadata field name, label count, <code>Use for File Explorer</code>, <code>Apply to enabled folders</code>, and <code>Delete rule</code> button all visible in the same row.
+</div>
 
 ## Rule Table Columns
 
@@ -133,7 +143,9 @@ The metadata field name is read-only. Field selection happens only when creating
 
 Rows are generated from known values for the field. You do not manually type values into the table.
 
-> Screenshot placeholder: Upload a table screenshot named `screenshots/rule-table-expanded.png`. It should show an expanded rule group with several rows, including the Drag handle, read-only Value text, Shape dropdown, Colour picker, Icon checkbox, Name checkbox, Target dropdown, Preview, and row Delete button. Use at least one long value so readers can see text wrapping.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 06 placeholder:</strong> Upload a table screenshot named <code>screenshots/rule-table-expanded.png</code>. It should show an expanded rule group with several rows, including the Drag handle, read-only Value text, Shape dropdown, Colour picker, Icon checkbox, Name checkbox, Target dropdown, Preview, and row Delete button. Use at least one long value so readers can see text wrapping.
+</div>
 
 ## File Explorer Labels
 
@@ -153,7 +165,9 @@ For each matching note:
 
 Rule order matters within the selected group. The first matching rule wins.
 
-> Screenshot placeholder: Upload a File Explorer screenshot named `screenshots/file-explorer-labels.png`. It should show note rows with Metadata Labels icons and/or coloured note names. Include at least three notes representing different values, such as `To Do`, `In Progress`, and `Done`, so the colour differences are clear.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 07 placeholder:</strong> Upload a File Explorer screenshot named <code>screenshots/file-explorer-labels.png</code>. It should show note rows with Metadata Labels icons and/or coloured note names. Include at least three notes representing different values, such as <code>To Do</code>, <code>In Progress</code>, and <code>Done</code>, so the colour differences are clear.
+</div>
 
 ## Note Properties Colouring
 
@@ -173,7 +187,9 @@ This feature does not depend on `Use for File Explorer`. A group can colour Prop
 
 If you turn `Colour note metadata` off, Metadata Labels removes its injected property colours.
 
-> Screenshot placeholder: Upload a Properties screenshot named `screenshots/coloured-note-properties.png`. It should show an open note with the Properties panel visible and multiple coloured values, for example `Editing Status: To Do`, `Editing Stage: Published`, and `Importance: Critical`. The File Explorer can be visible too, but the coloured Properties values should be the focus.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 08 placeholder:</strong> Upload a Properties screenshot named <code>screenshots/coloured-note-properties.png</code>. It should show an open note with the Properties panel visible and multiple coloured values, for example <code>Editing Status: To Do</code>, <code>Editing Stage: Published</code>, and <code>Importance: Critical</code>. The File Explorer can be visible too, but the coloured Properties values should be the focus.
+</div>
 
 ## Smart Folders
 
@@ -202,7 +218,9 @@ Aggregation:
 
 The folder then uses the matching rule's shape, colour, icon toggle, name toggle, and target setting.
 
-> Screenshot placeholder: Upload a smart folder screenshot named `screenshots/smart-folder-inheritance.png`. It should show a folder row in the File Explorer inheriting an icon or coloured name from descendant notes. Ideally include the expanded folder contents below it so readers can see child notes with statuses that explain the inherited folder state.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 09 placeholder:</strong> Upload a smart folder screenshot named <code>screenshots/smart-folder-inheritance.png</code>. It should show a folder row in the File Explorer inheriting an icon or coloured name from descendant notes. Ideally include the expanded folder contents below it so readers can see child notes with statuses that explain the inherited folder state.
+</div>
 
 ## Folder Context Menu
 
@@ -224,7 +242,9 @@ Metadata Labels >
 
 Disabling a smart folder immediately removes its injected styling.
 
-> Screenshot placeholder: Upload a folder context-menu screenshot named `screenshots/folder-context-menu.png`. It should show a File Explorer folder right-click menu with the `Metadata Labels` submenu open and either `Enable smart folder rule` or `Disable smart folder rule` visible.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 10 placeholder:</strong> Upload a folder context-menu screenshot named <code>screenshots/folder-context-menu.png</code>. It should show a File Explorer folder right-click menu with the <code>Metadata Labels</code> submenu open and either <code>Enable smart folder rule</code> or <code>Disable smart folder rule</code> visible.
+</div>
 
 ## Bulk Metadata Updates
 
@@ -253,7 +273,9 @@ When a folder is selected, Metadata Labels updates all descendant markdown notes
 
 Existing frontmatter is preserved. Notes without frontmatter receive a new frontmatter block.
 
-> Screenshot placeholder: Upload a bulk update screenshot named `screenshots/bulk-metadata-update-menu.png`. It should show a File Explorer context menu for selected notes and/or folders with `Metadata Labels > Apply Editing Status > To Do / In Progress / Done` visible. Use sample notes/folders with non-private names.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 11 placeholder:</strong> Upload a bulk update screenshot named <code>screenshots/bulk-metadata-update-menu.png</code>. It should show a File Explorer context menu for selected notes and/or folders with <code>Metadata Labels &gt; Apply Editing Status &gt; To Do / In Progress / Done</code> visible. Use sample notes/folders with non-private names.
+</div>
 
 ## Field Definition Import
 
@@ -268,7 +290,9 @@ This is a one-time copy:
 
 This is useful when a field has possible values that have not been used in any note yet.
 
-> Screenshot placeholder: Upload a field-import result screenshot named `screenshots/imported-field-values.png`. It should show a newly added rule group populated with values that came from imported field definitions, such as an `Editing Stage` group with many stage rows including values that are not currently used in notes.
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 12 placeholder:</strong> Upload a field-import result screenshot named <code>screenshots/imported-field-values.png</code>. It should show a newly added rule group populated with values that came from imported field definitions, such as an <code>Editing Stage</code> group with many stage rows including values that are not currently used in notes.
+</div>
 
 ## Value Normalisation
 
