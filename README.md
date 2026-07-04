@@ -4,17 +4,21 @@
 
 # Metadata Visuals
 
-Metadata Visuals is a metadata-driven visual engine for Obsidian.
+**Transform Obsidian metadata into powerful visual workflows.**
 
-Use metadata to control:
+Metadata Visuals lets you use frontmatter metadata to automatically drive:
 
-- File Explorer colours
-- File Explorer icons
-- smart folders
-- metadata colouring
-- workflow visualisation
-- bulk updates
-- folder inheritance
+- 🎨 File Explorer colours
+- 🏷️ File Explorer icons
+- 📂 Smart folders
+- ✨ Metadata highlighting
+- 🔄 Bulk metadata updates
+- 📋 Workflow visualisation
+- 📑 Metadata value pickers
+
+No emojis in filenames.
+No manually colouring notes.
+Just clean metadata driving beautiful visuals.
 
 It is built for writing, research, and project vaults where metadata such as `Editing Status`, `Editing Stage`, or `Importance` should be visible at a glance without putting emoji or formatting directly into the stored metadata value.
 
