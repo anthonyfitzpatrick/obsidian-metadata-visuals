@@ -137,9 +137,9 @@ The field selector starts blank. `Add rule` remains disabled until a real field 
 
 When you click `Add rule`, Metadata Visuals first tries to import known field definitions in the background. If no definitions are found, it uses values already found in note frontmatter. If both imported values and used values exist, it includes both.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 04 placeholder:</strong> Upload a field selector screenshot named <code>screenshots/add-rule-field-selector.png</code>. It should show the Add Rule <code>Select</code> input with the dropdown/list of available metadata fields visible. Include examples such as <code>Editing Status</code>, <code>Editing Stage</code>, and <code>Importance</code> if they are available in the sample vault.
-</div>
+<p align="center">
+  <img src="screenshots/add-rule-field-selector.png" alt="Metadata Visuals Add rule field selector showing available metadata fields." width="760">
+</p>
 
 ## Rule Group Header
 
