@@ -21,11 +21,28 @@ import {
 	MetadataLabelsSettings,
 } from './types';
 
+/**
+ * Main Obsidian plugin entry point.
+ *
+ * This class owns the durable plugin settings, wires together the matcher,
+ * renderer, and settings tab, and registers every Obsidian event that can
+ * affect File Explorer labels. The actual matching and DOM rendering are kept
+ * in separate services so this file stays focused on lifecycle, persistence,
+ * context menu actions, and bulk metadata writes.
+ */
 export default class MetadataLabelsPlugin extends Plugin {
 	settings: MetadataLabelsSettings = DEFAULT_SETTINGS;
 	private matcher!: MetadataRuleMatcher;
 	private explorerIcons!: FileExplorerIconRenderer;
 
+	/**
+	 * Loads settings, constructs the collaborating services, and subscribes to
+	 * vault/workspace events that should refresh labels.
+	 *
+	 * Notes refresh when metadata changes. Smart folders refresh when metadata,
+	 * file structure, or File Explorer layout changes because their visual state
+	 * is calculated from descendant note metadata rather than from a folder note.
+	 */
 	async onload(): Promise<void> {
 		await this.loadSettings();
 
@@ -103,10 +120,23 @@ export default class MetadataLabelsPlugin extends Plugin {
 		});
 	}
 
+	/**
+	 * Removes all DOM decorations installed by the renderer before Obsidian
+	 * unloads the plugin. This prevents stale icons or inline filename colours
+	 * from remaining in the File Explorer after the plugin is disabled.
+	 */
 	onunload(): void {
 		this.explorerIcons?.clearAll();
 	}
 
+	/**
+	 * Reads persisted JSON data and migrates it into the current settings shape.
+	 *
+	 * The spread with DEFAULT_SETTINGS is deliberately retained even though
+	 * parseSettings already returns all current properties. It protects future
+	 * additions by ensuring newly introduced settings always receive defaults
+	 * when loading older plugin data.
+	 */
 	async loadSettings(): Promise<void> {
 		const savedSettings = this.parseSettings(await this.loadData());
 
@@ -119,11 +149,24 @@ export default class MetadataLabelsPlugin extends Plugin {
 		};
 	}
 
+	/**
+	 * Persists plugin settings and schedules a visual refresh.
+	 *
+	 * Saving settings can change matching rules, filename colour behaviour,
+	 * smart-folder enablement, or folder inheritance fields, so the renderer is
+	 * asked to recompute the File Explorer after the write completes.
+	 */
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 		this.explorerIcons.scheduleRefreshAll();
 	}
 
+	/**
+	 * Refreshes a single file row when Obsidian reports a file-level event.
+	 *
+	 * Non-markdown files cannot have Obsidian frontmatter metadata, so any
+	 * decoration for that path is cleared instead of trying to match rules.
+	 */
 	private refreshFile(file: TFile): void {
 		if (file.extension !== 'md') {
 			this.explorerIcons.clearPath(file.path);
@@ -133,6 +176,17 @@ export default class MetadataLabelsPlugin extends Plugin {
 		this.explorerIcons.refreshFile(file);
 	}
 
+	/**
+	 * Converts unknown persisted plugin data into safe, current settings.
+	 *
+	 * This is the plugin's data migration layer. It ignores malformed rules,
+	 * normalises old emoji-prefixed status defaults such as "🔴 To Do" into
+	 * "To Do", and supplies defaults for fields added after earlier releases:
+	 * colourFilename defaults to true, showIcon defaults to true, and target
+	 * defaults to "both". Smart folder field enablement is also backfilled for
+	 * older users who already had Editing Status rules before the per-field
+	 * smart-folder toggle existed.
+	 */
 	private parseSettings(data: unknown): MetadataLabelsSettings {
 		if (!this.isRecord(data) || !Array.isArray(data.rules)) {
 			return { rules: [], smartFolders: [], smartFolderFields: [] };
@@ -163,6 +217,13 @@ export default class MetadataLabelsPlugin extends Plugin {
 		};
 	}
 
+	/**
+	 * Runtime guard for persisted rule objects.
+	 *
+	 * Obsidian plugin data is untyped JSON. This method accepts the required
+	 * fields from all supported historical rule versions and lets parseSettings
+	 * fill in optional fields that may be missing from older saved data.
+	 */
 	private isMetadataLabelRuleData(
 		value: unknown,
 	): value is Omit<MetadataLabelRule, 'colourFilename' | 'showIcon' | 'target'>
@@ -175,16 +236,34 @@ export default class MetadataLabelsPlugin extends Plugin {
 			&& typeof value.color === 'string';
 	}
 
+	/**
+	 * Narrowing helper for unknown JSON-like values.
+	 */
 	private isRecord(value: unknown): value is Record<string, unknown> {
 		return typeof value === 'object' && value !== null;
 	}
 
+	/**
+	 * Normalises legacy visual status values into the raw metadata value used
+	 * by current rules.
+	 *
+	 * Early defaults stored values like "🔴 To Do" directly in the rule value.
+	 * Current rules store "To Do" and keep the visual shape/colour separately.
+	 * Removing only leading whitespace and status-colour emoji keeps matching
+	 * backwards compatible with notes that still contain emoji-prefixed values.
+	 */
 	private normalizeStatusValue(value: string): string {
 		return value
 			.replace(/^[\s🔴🟠🟢🟡🔵🟣⚫⚪🟤]+/u, '')
 			.trim();
 	}
 
+	/**
+	 * Safely parses a persisted target value.
+	 *
+	 * Unknown values fall back to "both" so older or manually edited data keeps
+	 * producing visible labels instead of silently disabling a rule.
+	 */
 	private parseRuleTarget(value: unknown): MetadataLabelRuleTarget {
 		if (value === 'notes' || value === 'folders' || value === 'both') {
 			return value;
@@ -193,12 +272,28 @@ export default class MetadataLabelsPlugin extends Plugin {
 		return 'both';
 	}
 
+	/**
+	 * Backfills smart folder inheritance for older settings.
+	 *
+	 * Before smart folder inheritance was controlled per metadata field, the
+	 * Editing Status group was the only supported smart-folder source. Returning
+	 * Editing Status here preserves that behaviour for existing users while new
+	 * installs still start with no smart folder paths enabled.
+	 */
 	private getDefaultSmartFolderFields(rules: MetadataLabelRule[]): string[] {
 		return rules.some((rule) => rule.field === 'Editing Status')
 			? ['Editing Status']
 			: [];
 	}
 
+	/**
+	 * Adds the top-level "Metadata Labels" context-menu item for File Explorer
+	 * single-item and multi-item menus.
+	 *
+	 * Folder right-clicks include the smart-folder enable/disable action.
+	 * Every note/folder selection also receives bulk metadata update submenus
+	 * generated from the current rule list.
+	 */
 	private addMetadataLabelsMenuItem(
 		menu: Menu,
 		files: TAbstractFile[],
@@ -221,6 +316,13 @@ export default class MetadataLabelsPlugin extends Plugin {
 		});
 	}
 
+	/**
+	 * Adds the folder-specific smart folder toggle action.
+	 *
+	 * The folder path remains stored internally in settings.smartFolders. The
+	 * settings UI controls which metadata fields participate in inheritance,
+	 * while this context-menu action controls which folder paths are enabled.
+	 */
 	private addSmartFolderAction(
 		menu: Menu,
 		folder: TFolder,
@@ -245,6 +347,14 @@ export default class MetadataLabelsPlugin extends Plugin {
 		});
 	}
 
+	/**
+	 * Adds bulk metadata update submenus based on configured rule groups.
+	 *
+	 * For a field such as Editing Status, the menu becomes:
+	 * Metadata Labels > Apply Editing Status > To Do / In Progress / Done.
+	 * Values are taken from rule.value, which is the raw frontmatter value, not
+	 * the icon, emoji, preview text, or colour.
+	 */
 	private addBulkUpdateActions(menu: Menu, files: TAbstractFile[]): void {
 		const ruleGroups = this.getBulkUpdateRuleGroups();
 
@@ -274,6 +384,12 @@ export default class MetadataLabelsPlugin extends Plugin {
 		}
 	}
 
+	/**
+	 * Groups current rules by metadata field for the bulk update menu.
+	 *
+	 * Empty placeholder rules are skipped, and duplicate values within the same
+	 * field are collapsed so the user does not see repeated menu actions.
+	 */
 	private getBulkUpdateRuleGroups(): Map<string, MetadataLabelRule[]> {
 		const groups = new Map<string, MetadataLabelRule[]>();
 
@@ -297,6 +413,15 @@ export default class MetadataLabelsPlugin extends Plugin {
 		return groups;
 	}
 
+	/**
+	 * Applies a selected rule value to every markdown note represented by a
+	 * File Explorer selection.
+	 *
+	 * Selected folders expand to all descendant markdown notes. A Map keyed by
+	 * path deduplicates overlapping folder selections so each note is written at
+	 * most once. After writing, changed note rows are refreshed immediately and a
+	 * full refresh is scheduled so smart folders can recalculate from metadata.
+	 */
 	private async applyBulkMetadataValue(
 		files: TAbstractFile[],
 		field: string,
@@ -317,6 +442,14 @@ export default class MetadataLabelsPlugin extends Plugin {
 		}
 	}
 
+	/**
+	 * Reads, updates, and writes a markdown note's frontmatter.
+	 *
+	 * This intentionally uses Vault.read and Vault.modify instead of
+	 * FileManager.processFrontMatter because the plugin keeps minAppVersion at
+	 * 1.0.0. The newer helper is convenient, but the linter correctly rejects it
+	 * for that advertised compatibility range.
+	 */
 	private async updateFrontmatterValue(
 		file: TFile,
 		field: string,
@@ -330,6 +463,13 @@ export default class MetadataLabelsPlugin extends Plugin {
 		}
 	}
 
+	/**
+	 * Returns markdown content with one frontmatter property updated.
+	 *
+	 * Existing frontmatter is parsed and re-stringified so unrelated fields are
+	 * preserved as data. If the note has no frontmatter block, a new block is
+	 * created at the top of the file.
+	 */
 	private setFrontmatterValue(content: string, field: string, value: string): string {
 		const frontmatterInfo = this.getFrontmatterInfo(content);
 		const frontmatter = frontmatterInfo
@@ -349,6 +489,13 @@ export default class MetadataLabelsPlugin extends Plugin {
 		return `${frontmatterBlock}${content.slice(frontmatterInfo.contentStart)}`;
 	}
 
+	/**
+	 * Locates the leading YAML frontmatter block in a markdown file.
+	 *
+	 * Only a block at the very start of the file counts as frontmatter. The
+	 * returned contentStart offset points to the first byte after the closing
+	 * fence, allowing setFrontmatterValue to replace the whole block cleanly.
+	 */
 	private getFrontmatterInfo(content: string): { yaml: string; contentStart: number } | null {
 		const openingFence = content.startsWith('---\r\n') ? '---\r\n' : '---\n';
 
@@ -369,6 +516,12 @@ export default class MetadataLabelsPlugin extends Plugin {
 		};
 	}
 
+	/**
+	 * Parses YAML into an object suitable for frontmatter mutation.
+	 *
+	 * Invalid or non-object YAML is treated as empty frontmatter. Obsidian's
+	 * parseYaml helper is used so parsing behaviour matches the host app.
+	 */
 	private parseFrontmatter(yaml: string): Record<string, unknown> {
 		const parsedFrontmatter = parseYaml(yaml) as unknown;
 
@@ -379,6 +532,13 @@ export default class MetadataLabelsPlugin extends Plugin {
 		return {};
 	}
 
+	/**
+	 * Expands a File Explorer selection into markdown notes.
+	 *
+	 * Individual markdown files are included directly. Folders contribute every
+	 * descendant markdown file. The map prevents duplicate writes when the user
+	 * selects both a parent folder and one of its child folders or notes.
+	 */
 	private getMarkdownFilesFromSelection(files: TAbstractFile[]): TFile[] {
 		const markdownFiles = new Map<string, TFile>();
 
@@ -397,6 +557,12 @@ export default class MetadataLabelsPlugin extends Plugin {
 		return Array.from(markdownFiles.values());
 	}
 
+	/**
+	 * Checks whether a markdown file is contained by a folder path.
+	 *
+	 * The vault root is a special case because every file is inside it, while
+	 * normal folders use a path prefix with a slash boundary.
+	 */
 	private isFileInsideFolder(file: TFile, folder: TFolder): boolean {
 		if (folder.path === '/') {
 			return true;
@@ -405,6 +571,13 @@ export default class MetadataLabelsPlugin extends Plugin {
 		return file.path.startsWith(`${folder.path}/`);
 	}
 
+	/**
+	 * Accesses Obsidian's native MenuItem.setSubmenu API through a typed wrapper.
+	 *
+	 * Some Obsidian typings do not expose setSubmenu even when the runtime
+	 * supports it. This helper keeps submenu creation centralised and avoids the
+	 * older click-fallback approach that could create empty or unreliable menus.
+	 */
 	private getSubmenu(item: MenuItem): Menu | null {
 		const maybeSubmenuItem = item as MenuItem & {
 			setSubmenu?: () => Menu;
@@ -413,6 +586,13 @@ export default class MetadataLabelsPlugin extends Plugin {
 		return maybeSubmenuItem.setSubmenu?.() ?? null;
 	}
 
+	/**
+	 * Enables smart folder inheritance for a folder path.
+	 *
+	 * This only stores the path. The active metadata fields are controlled by
+	 * settings.smartFolderFields, and the renderer combines both settings when
+	 * deciding whether a folder should receive inherited visuals.
+	 */
 	addSmartFolder(path: string): void {
 		if (!this.settings.smartFolders.includes(path)) {
 			this.settings.smartFolders.push(path);
@@ -420,10 +600,20 @@ export default class MetadataLabelsPlugin extends Plugin {
 		}
 	}
 
+	/**
+	 * Disables smart folder inheritance for a folder path.
+	 */
 	removeSmartFolder(path: string): void {
 		this.settings.smartFolders = this.settings.smartFolders.filter((folderPath) => folderPath !== path);
 	}
 
+	/**
+	 * Keeps stored smart folder paths valid after folder renames.
+	 *
+	 * Both the renamed folder itself and any enabled descendant paths are moved
+	 * to the new prefix so users do not have to re-enable smart folders after
+	 * reorganising the vault.
+	 */
 	private renameSmartFolder(oldPath: string, newPath: string): void {
 		this.settings.smartFolders = this.settings.smartFolders.map((folderPath) => {
 			if (folderPath === oldPath) {

@@ -45,6 +45,14 @@ interface FieldSelector {
 	value: string;
 }
 
+/**
+ * Classic Obsidian settings tab for Metadata Labels.
+ *
+ * The plugin intentionally uses PluginSettingTab.display() rather than
+ * getSettingDefinitions() because it must support Obsidian 1.12.7. The UI is a
+ * compact table grouped by metadata field so writers can manage many label
+ * rules without large repeated cards.
+ */
 export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	constructor(
 		app: App,
@@ -53,6 +61,13 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		super(app, plugin);
 	}
 
+	/**
+	 * Rebuilds the entire settings page from current settings.
+	 *
+	 * The settings UI is small enough that a full redraw after structural
+	 * changes is simpler and safer than incremental DOM updates. Input controls
+	 * save directly into plugin.settings and then call plugin.saveSettings().
+	 */
 	display(): void {
 		const { containerEl } = this;
 		const fields = this.getFrontmatterFields();
@@ -117,6 +132,13 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		}
 	}
 
+	/**
+	 * Renders one metadata field group, such as "Editing Status".
+	 *
+	 * Each group owns a field selector, the "Apply to enabled folders" smart
+	 * folder toggle, an Add row button for another value under the same field,
+	 * and a Delete rule button that removes the entire group.
+	 */
 	private renderRuleGroup(
 		containerEl: HTMLElement,
 		field: string,
@@ -201,6 +223,14 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		}
 	}
 
+	/**
+	 * Renders one compact table row for one field/value rule.
+	 *
+	 * The row exposes only the raw metadata value, visual shape, colour, icon and
+	 * filename toggles, target, preview, and row delete action. The preview uses
+	 * the same icon and filename-colour toggles so the user can see the File
+	 * Explorer effect before matching any note.
+	 */
 	private renderRule(tableEl: HTMLElement, rule: MetadataLabelRule): void {
 		const rowEl = tableEl.createDiv('metadata-labels-rule-table-row');
 		const valueEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-value-cell');
@@ -332,6 +362,14 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		});
 	}
 
+	/**
+	 * Configures a text input as a constrained frontmatter-field selector.
+	 *
+	 * Obsidian 1.12.7 compatibility rules out newer declarative settings
+	 * controls, so this uses a datalist-backed TextComponent. The selector only
+	 * accepts fields already found in vault frontmatter; invalid typed values are
+	 * reverted on change/blur so rules cannot be created for non-existent fields.
+	 */
 	private configureFieldSelector(
 		text: TextComponent,
 		value: string,
@@ -389,6 +427,12 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		return selector;
 	}
 
+	/**
+	 * Configures a text input with an async save callback.
+	 *
+	 * The wrapper keeps renderRule focused on rule semantics rather than the
+	 * repetitive TextComponent onChange plumbing.
+	 */
 	private configureText(
 		text: TextComponent,
 		value: string,
@@ -403,6 +447,13 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			});
 	}
 
+	/**
+	 * Seeds first-run/default rules when no useful rules exist.
+	 *
+	 * Empty placeholder rows are not useful because they cannot match metadata.
+	 * If every saved row is empty or placeholder-like, the settings page replaces
+	 * them with the three writer-friendly Editing Status defaults.
+	 */
 	private ensureDefaultRules(): void {
 		if (this.plugin.settings.rules.some((rule) => this.isUsefulRule(rule))) {
 			return;
@@ -419,12 +470,21 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		void this.plugin.saveSettings();
 	}
 
+	/**
+	 * Returns whether a rule has enough data to match a note or folder status.
+	 */
 	private isUsefulRule(rule: MetadataLabelRule): boolean {
 		return rule.field.trim() !== ''
 			&& rule.value.trim() !== ''
 			&& rule.icon.trim() !== '';
 	}
 
+	/**
+	 * Creates one of the seeded Editing Status rules.
+	 *
+	 * The raw value is stored without emoji. Icon shape and colour live in their
+	 * own columns, and both note names and icons are enabled by default.
+	 */
 	private createEditingStatusRule(
 		value: string,
 		color: string,
@@ -441,6 +501,9 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		};
 	}
 
+	/**
+	 * Creates a blank new row under an existing metadata field group.
+	 */
 	private createRuleForField(field: string): MetadataLabelRule {
 		return {
 			...createDefaultRule(),
@@ -451,6 +514,13 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		};
 	}
 
+	/**
+	 * Updates which metadata fields drive enabled smart folders.
+	 *
+	 * Folder paths are still controlled from the File Explorer context menu.
+	 * This per-field setting answers whether this rule group should be used when
+	 * calculating inherited visuals for those enabled folders.
+	 */
 	private setSmartFolderFieldEnabled(field: string, enabled: boolean): void {
 		const smartFolderFields = this.plugin.settings.smartFolderFields;
 
@@ -467,6 +537,9 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			.filter((smartFolderField) => smartFolderField !== field);
 	}
 
+	/**
+	 * Safely parses a rule target selected in the row dropdown.
+	 */
 	private parseRuleTarget(value: string): MetadataLabelRuleTarget {
 		if (value === 'notes' || value === 'folders' || value === 'both') {
 			return value;
@@ -475,6 +548,12 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		return 'both';
 	}
 
+	/**
+	 * Scans the vault metadata cache for existing frontmatter field names.
+	 *
+	 * The settings UI uses this list to keep field selection writer-friendly and
+	 * prevent typos from creating rules that can never match any existing notes.
+	 */
 	private getFrontmatterFields(): string[] {
 		const fields = new Set<string>();
 
@@ -493,6 +572,12 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		return Array.from(fields).sort((a, b) => a.localeCompare(b));
 	}
 
+	/**
+	 * Groups rules by metadata field for the settings table.
+	 *
+	 * Legacy or partially migrated rules without a field are displayed under
+	 * Editing Status so they remain visible and editable instead of disappearing.
+	 */
 	private groupRulesByField(): Map<string, MetadataLabelRule[]> {
 		const groups = new Map<string, MetadataLabelRule[]>();
 
@@ -507,6 +592,13 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		return groups;
 	}
 
+	/**
+	 * Updates a row preview to mirror the current rule toggles.
+	 *
+	 * The preview intentionally shows the raw metadata value as the text and
+	 * uses icon/colour settings for the visual effect, matching how note and
+	 * folder rows will appear in the File Explorer.
+	 */
 	private updatePreview(
 		iconEl: HTMLElement,
 		textEl: HTMLElement,
