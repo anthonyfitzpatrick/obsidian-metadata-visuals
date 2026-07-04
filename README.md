@@ -30,7 +30,36 @@ Importance: Critical
 ---
 ```
 
+## Website
+
+https://wolf359.app/metadata-visuals
+
 Rules keep the metadata value clean. Icon shape, colour, filename colouring, folder inheritance, bulk metadata updates, and property colouring are display settings managed by the plugin.
+
+## Quick Start
+
+1. Install Metadata Visuals.
+2. Open Settings → Metadata Visuals.
+3. Select a metadata field.
+4. Click Add Rule.
+5. Choose colours and icons.
+6. Done.
+
+## Why Metadata Visuals?
+
+Metadata Visuals isn't just a colouring plugin.
+
+It allows metadata itself to become the engine that drives your workflow.
+
+The same metadata can simultaneously:
+
+- colour the File Explorer
+- colour note properties
+- drive smart folders
+- enable bulk updates
+- power visual workflows
+
+without modifying the stored metadata itself.
 
 ## Screenshots
 
