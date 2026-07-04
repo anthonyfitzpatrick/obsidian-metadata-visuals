@@ -322,8 +322,11 @@ When a folder is selected, Metadata Visuals updates all descendant markdown note
 
 Existing frontmatter is preserved as YAML data. Notes without frontmatter receive a new frontmatter block.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 11 placeholder:</strong> Upload a bulk update screenshot named <code>screenshots/bulk-metadata-update-menu.png</code>. It should show a File Explorer context menu for selected notes and/or folders with <code>Metadata Visuals &gt; Apply Editing Status &gt; To Do / In Progress / Done</code> visible. Use sample notes/folders with non-private names.
+<div align="center">
+  <p><strong>Before</strong></p>
+  <img src="screenshots/bulk-metadata-update-menu.png" alt="Before bulk update: Metadata Visuals context menu applying Editing Status to selected notes." width="870">
+  <p><strong>After</strong></p>
+  <img src="screenshots/bulk-metadata-update-menu-after.png" alt="After bulk update: selected notes show updated Metadata Visuals icons and colours in the File Explorer." width="870">
 </div>
 
 ## Field Definition Import
