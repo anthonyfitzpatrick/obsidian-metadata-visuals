@@ -283,9 +283,9 @@ Metadata Visuals >
 
 Disabling a smart folder immediately removes its injected styling.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 10 placeholder:</strong> Upload a folder context-menu screenshot named <code>screenshots/folder-context-menu.png</code>. It should show a File Explorer folder right-click menu with the <code>Metadata Visuals</code> submenu open and either <code>Enable smart folder rule</code> or <code>Disable smart folder rule</code> visible.
-</div>
+<p align="center">
+  <img src="screenshots/folder-context-menu.png" alt="File Explorer folder context menu showing the Metadata Visuals submenu with smart folder and bulk update actions." width="820">
+</p>
 
 ## Bulk Metadata Updates
 
