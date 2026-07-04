@@ -299,8 +299,10 @@ Metadata Visuals is released under the 0BSD license. See [LICENSE](LICENSE).
 
 ---
 
-[🐞 Report a bug](https://wolf359.app/metadata-visuals/report-bug/) |
-[💡 Feature request](https://wolf359.app/metadata-visuals/request-feature/) |
-[🌐 wolf359.app](https://wolf359.app/) |
-[📚 Wolf 359 Press](https://wolf359.press/) |
-[☕ Buy me a coffee](https://buymeacoffee.com/wolf359pressab)
+<p align="center">
+  <a href="https://wolf359.app/metadata-visuals/report-bug/">🐞 Report a bug</a> |
+  <a href="https://wolf359.app/metadata-visuals/request-feature/">💡 Feature request</a> |
+  <a href="https://wolf359.app/">🌐 wolf359.app</a> |
+  <a href="https://wolf359.press/">📚 Wolf 359 Press</a> |
+  <a href="https://buymeacoffee.com/wolf359pressab"><img src="assets/buy-me-a-coffee.jpeg" alt="" width="16" height="16" style="vertical-align: text-bottom;"> Buy me a coffee</a>
+</p>
