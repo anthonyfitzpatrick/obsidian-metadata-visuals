@@ -30,10 +30,9 @@ For a manual test install, place these files in your vault plugin folder:
 <vault>/.obsidian/plugins/metadata-visuals/manifest.json
 <vault>/.obsidian/plugins/metadata-visuals/main.js
 <vault>/.obsidian/plugins/metadata-visuals/styles.css
-<vault>/.obsidian/plugins/metadata-visuals/assets/icon.svg
 ```
 
-Then open Obsidian Settings -> Community plugins, reload plugins if needed, and enable Metadata Visuals.
+Then open Obsidian Settings -> Community plugins, reload plugins if needed, and enable Metadata Visuals. The About logo is bundled into `main.js`, so no extra image files are required at runtime.
 
 The plugin does not require Metadata Menu, Dataview, Iconize, Templater, internet access, or any runtime `node_modules` folder. Optional field-definition import is a one-time copy into Metadata Visuals' own settings.
 

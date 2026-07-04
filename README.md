@@ -68,7 +68,6 @@ Screenshots will be added before the first public release.
    - `manifest.json`
    - `main.js`
    - `styles.css`
-   - `assets/icon.svg`
 2. Create this folder in your vault:
 
 ```text
@@ -76,15 +75,11 @@ Screenshots will be added before the first public release.
 ```
 
 3. Put `manifest.json`, `main.js`, and `styles.css` into that folder.
-4. Create an `assets` folder inside the plugin folder and put `icon.svg` there:
+4. In Obsidian, open Settings -> Community plugins.
+5. Reload plugins if needed.
+6. Enable `Metadata Visuals`.
 
-```text
-<vault>/.obsidian/plugins/metadata-visuals/assets/icon.svg
-```
-
-5. In Obsidian, open Settings -> Community plugins.
-6. Reload plugins if needed.
-7. Enable `Metadata Visuals`.
+The About logo is bundled into `main.js`, so no extra image files are required at runtime.
 
 ### Manual Testing From Source
 
@@ -270,9 +265,8 @@ Before publishing a GitHub release:
 1. Run `npm run build`.
 2. Run `npm run lint`.
 3. Upload `manifest.json`, `main.js`, and `styles.css` as release assets.
-4. Include `assets/icon.svg` in release packaging so the settings About section can show the official logo.
-5. Confirm `manifest.json`, `versions.json`, and `package.json` versions match.
-6. Add screenshots to this README.
+4. Confirm `manifest.json`, `versions.json`, and `package.json` versions match.
+5. Add screenshots to this README.
 
 ## Roadmap
 

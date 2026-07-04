@@ -109,15 +109,22 @@
 }
 
 .metadata-visuals-about-logo {
+	align-items: center;
 	background: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 12px;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-	display: block;
+	display: inline-flex;
 	flex: 0 0 48px;
 	height: 48px;
-	image-rendering: auto;
-	object-fit: contain;
+	justify-content: center;
+	overflow: hidden;
+	width: 48px;
+}
+
+.metadata-visuals-about-logo svg {
+	display: block;
+	height: 48px;
 	width: 48px;
 }
 
