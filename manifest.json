@@ -3,7 +3,7 @@
 	"name": "Metadata Labels",
 	"version": "0.1.0",
 	"minAppVersion": "1.0.0",
-	"description": "Frontmatter-driven labels for Obsidian notes.",
+	"description": "Visual labels from frontmatter metadata for notes, folders, and properties.",
 	"author": "Anthony Fitzpatrick",
 	"isDesktopOnly": false
 }

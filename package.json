@@ -1,7 +1,15 @@
 {
 	"name": "metadata-labels",
 	"version": "0.1.0",
-	"description": "Frontmatter-driven labels for Obsidian notes.",
+	"description": "Visual labels from frontmatter metadata for Obsidian notes, folders, and properties.",
+	"homepage": "https://github.com/anthony/obsidian-metadata-labels#readme",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/anthony/obsidian-metadata-labels.git"
+	},
+	"bugs": {
+		"url": "https://github.com/anthony/obsidian-metadata-labels/issues"
+	},
 	"main": "main.js",
 	"type": "module",
 	"scripts": {

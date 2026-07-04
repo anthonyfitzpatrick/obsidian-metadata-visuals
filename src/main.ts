@@ -12,6 +12,7 @@ import {
 import type { MenuItem } from 'obsidian';
 
 import { FileExplorerIconRenderer } from './services/file-explorer-icon-renderer';
+import { MetadataPropertiesRenderer } from './services/metadata-properties-renderer';
 import { MetadataRuleMatcher } from './services/metadata-rule-matcher';
 import { MetadataLabelsSettingsTab } from './settings-tab';
 import {
@@ -34,6 +35,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 	settings: MetadataLabelsSettings = DEFAULT_SETTINGS;
 	private matcher!: MetadataRuleMatcher;
 	private explorerIcons!: FileExplorerIconRenderer;
+	private metadataProperties!: MetadataPropertiesRenderer;
 
 	/**
 	 * Loads settings, constructs the collaborating services, and subscribes to
@@ -46,13 +48,20 @@ export default class MetadataLabelsPlugin extends Plugin {
 	async onload(): Promise<void> {
 		await this.loadSettings();
 
-		this.matcher = new MetadataRuleMatcher(this.app, () => this.settings.rules);
+		this.ensureFileExplorerField();
+
+		this.matcher = new MetadataRuleMatcher(this.app, () => this.getFileExplorerRules());
 		this.explorerIcons = new FileExplorerIconRenderer(
 			this.app,
 			this.matcher,
-			() => this.settings.rules,
+			() => this.getFileExplorerRules(),
 			() => this.settings.smartFolders,
 			() => this.settings.smartFolderFields,
+		);
+		this.metadataProperties = new MetadataPropertiesRenderer(
+			this.app,
+			() => this.settings.rules,
+			() => this.settings.colourMetadata,
 		);
 
 		this.addSettingTab(new MetadataLabelsSettingsTab(this.app, this));
@@ -61,6 +70,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 			this.app.metadataCache.on('changed', (file) => {
 				this.refreshFile(file);
 				this.explorerIcons.scheduleRefreshAll();
+				this.metadataProperties.scheduleRefresh();
 			}),
 		);
 
@@ -111,12 +121,21 @@ export default class MetadataLabelsPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on('layout-change', () => {
 				this.explorerIcons.scheduleRefreshAll();
+				this.metadataProperties.scheduleRefresh();
+			}),
+		);
+
+		this.registerEvent(
+			this.app.workspace.on('file-open', () => {
+				this.metadataProperties.scheduleRefresh();
 			}),
 		);
 
 		this.app.workspace.onLayoutReady(() => {
 			this.explorerIcons.start();
+			this.metadataProperties.start();
 			this.explorerIcons.scheduleRefreshAll();
+			this.metadataProperties.scheduleRefresh();
 		});
 	}
 
@@ -127,6 +146,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 */
 	onunload(): void {
 		this.explorerIcons?.clearAll();
+		this.metadataProperties?.stop();
 	}
 
 	/**
@@ -147,6 +167,9 @@ export default class MetadataLabelsPlugin extends Plugin {
 			smartFolders: savedSettings.smartFolders,
 			smartFolderFields: savedSettings.smartFolderFields,
 			allowedValues: savedSettings.allowedValues,
+			colourMetadata: savedSettings.colourMetadata,
+			fileExplorerField: savedSettings.fileExplorerField,
+			collapsedRuleGroups: savedSettings.collapsedRuleGroups,
 		};
 	}
 
@@ -158,8 +181,65 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 * asked to recompute the File Explorer after the write completes.
 	 */
 	async saveSettings(): Promise<void> {
+		this.ensureFileExplorerField();
 		await this.saveData(this.settings);
 		this.explorerIcons.scheduleRefreshAll();
+		this.metadataProperties.scheduleRefresh();
+	}
+
+	/**
+	 * Returns the one rule group allowed to affect File Explorer visuals.
+	 *
+	 * Metadata/property colouring still uses all rules. File Explorer icons,
+	 * filename colour, and smart folder inheritance use only this selected
+	 * group, which prevents multiple metadata fields from competing to colour
+	 * the same note or folder row.
+	 */
+	private getFileExplorerRules(): MetadataLabelRule[] {
+		this.ensureFileExplorerField();
+
+		return this.settings.rules.filter((rule) => rule.field === this.settings.fileExplorerField);
+	}
+
+	/**
+	 * Ensures older settings always have one selected File Explorer field.
+	 *
+	 * If a saved selection is missing or points to a deleted rule group, Editing
+	 * Status is preferred when present; otherwise the first available rule group
+	 * becomes the selected File Explorer source.
+	 */
+	ensureFileExplorerField(): void {
+		const fields = this.getRuleFields();
+
+		if (fields.length === 0) {
+			this.settings.fileExplorerField = '';
+			return;
+		}
+
+		if (fields.includes(this.settings.fileExplorerField)) {
+			return;
+		}
+
+		this.settings.fileExplorerField = fields.includes('Editing Status')
+			? 'Editing Status'
+			: fields[0] ?? '';
+	}
+
+	/**
+	 * Returns rule group field names in settings order.
+	 */
+	private getRuleFields(): string[] {
+		const fields: string[] = [];
+
+		for (const rule of this.settings.rules) {
+			const field = rule.field.trim();
+
+			if (field && !fields.includes(field)) {
+				fields.push(field);
+			}
+		}
+
+		return fields;
 	}
 
 	/**
@@ -186,7 +266,10 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 * colourFilename defaults to true, showIcon defaults to true, and target
 	 * defaults to "both". Smart folder field enablement and allowed value lists
 	 * are also backfilled for older users who already had Editing Status rules
-	 * before those settings existed.
+	 * before those settings existed. The single File Explorer field and metadata
+	 * property-colouring toggle are migrated here as settings-level choices
+	 * because they control how existing rules are interpreted rather than the
+	 * rule rows themselves.
 	 */
 	private parseSettings(data: unknown): MetadataLabelsSettings {
 		if (!this.isRecord(data) || !Array.isArray(data.rules)) {
@@ -195,6 +278,9 @@ export default class MetadataLabelsPlugin extends Plugin {
 				smartFolders: [],
 				smartFolderFields: [],
 				allowedValues: {},
+				colourMetadata: true,
+				fileExplorerField: '',
+				collapsedRuleGroups: [],
 			};
 		}
 
@@ -221,6 +307,13 @@ export default class MetadataLabelsPlugin extends Plugin {
 				? data.smartFolderFields.filter((field): field is string => typeof field === 'string')
 				: this.getDefaultSmartFolderFields(rules),
 			allowedValues: this.parseAllowedValues(data.allowedValues, rules),
+			colourMetadata: typeof data.colourMetadata === 'boolean'
+				? data.colourMetadata
+				: true,
+			fileExplorerField: this.parseFileExplorerField(data.fileExplorerField, rules),
+			collapsedRuleGroups: Array.isArray(data.collapsedRuleGroups)
+				? data.collapsedRuleGroups.filter((field): field is string => typeof field === 'string')
+				: [],
 		};
 	}
 
@@ -291,6 +384,38 @@ export default class MetadataLabelsPlugin extends Plugin {
 		return rules.some((rule) => rule.field === 'Editing Status')
 			? ['Editing Status']
 			: [];
+	}
+
+	/**
+	 * Migrates the single File Explorer source field.
+	 *
+	 * Older builds allowed every matching rule group to compete for File
+	 * Explorer visuals. Public releases use exactly one selected field group so
+	 * note and folder rows have predictable icon/name colour priority. Editing
+	 * Status is preferred because it was the original default group; otherwise
+	 * the first rule group in settings order becomes the source.
+	 */
+	private parseFileExplorerField(
+		value: unknown,
+		rules: MetadataLabelRule[],
+	): string {
+		const fields: string[] = [];
+
+		for (const rule of rules) {
+			if (rule.field && !fields.includes(rule.field)) {
+				fields.push(rule.field);
+			}
+		}
+
+		if (typeof value === 'string' && fields.includes(value)) {
+			return value;
+		}
+
+		if (fields.includes('Editing Status')) {
+			return 'Editing Status';
+		}
+
+		return fields[0] ?? '';
 	}
 
 	/**

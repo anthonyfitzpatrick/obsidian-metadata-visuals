@@ -35,13 +35,20 @@ export interface MetadataLabelRule {
  * "which folders?" and the other answers "which metadata field should drive
  * inheritance for those folders?" allowedValues stores this plugin's own
  * per-field value vocabulary so Metadata Labels does not depend on Metadata
- * Menu or on values already present in note frontmatter.
+ * Menu or on values already present in note frontmatter. fileExplorerField is
+ * the one metadata field group allowed to control File Explorer icons/name
+ * colour, while colourMetadata controls whether all matching rule groups colour
+ * visible values in the note Properties panel. collapsedRuleGroups stores the
+ * settings UI disclosure state by metadata field.
  */
 export interface MetadataLabelsSettings {
 	rules: MetadataLabelRule[];
 	smartFolders: string[];
 	smartFolderFields: string[];
 	allowedValues: Record<string, string[]>;
+	colourMetadata: boolean;
+	fileExplorerField: string;
+	collapsedRuleGroups: string[];
 }
 
 /**
@@ -52,6 +59,9 @@ export const DEFAULT_SETTINGS: MetadataLabelsSettings = {
 	smartFolders: [],
 	smartFolderFields: [],
 	allowedValues: {},
+	colourMetadata: true,
+	fileExplorerField: '',
+	collapsedRuleGroups: [],
 };
 
 /**

@@ -1,140 +1,149 @@
 # Metadata Labels
 
-Metadata Labels is an Obsidian plugin that turns frontmatter metadata into visual labels in the File Explorer. It is designed for writing projects where notes need Scrivener-style status markers such as `To Do`, `In Progress`, and `Done`.
+Metadata Labels is an Obsidian plugin that turns frontmatter metadata into visual labels for notes, folders, and visible note properties.
 
-The plugin is standalone at runtime. It can optionally import field definitions from known local sources, then stores the imported field names and possible values in its own settings so the source plugin is not needed afterwards.
-
-The plugin keeps the actual metadata value clean. A note can store:
+It is built for writing, research, and project vaults where metadata such as `Editing Status`, `Editing Stage`, or `Importance` should be visible at a glance without putting emoji or formatting directly into the stored metadata value.
 
 ```yaml
 ---
 Editing Status: In Progress
+Editing Stage: Published
+Importance: Critical
 ---
 ```
 
-The icon shape, icon colour, filename colour, and note/folder target behaviour are controlled by plugin rules rather than being embedded in the metadata value.
+Rules keep the metadata value clean. Icon shape, colour, filename colouring, folder inheritance, and property colouring are display settings managed by the plugin.
+
+## Screenshots
+
+Screenshots will be added before the first public release.
+
+- File Explorer labels
+- Rule settings table
+- Smart folder inheritance
+- Coloured note Properties values
 
 ## Features
 
-- Adds configurable File Explorer icons based on frontmatter field/value rules.
-- Optionally colours note names with the same rule colour.
-- Supports note-only, folder-only, or note-and-folder rule targets.
-- Provides default Editing Status rules for `To Do`, `In Progress`, and `Done`.
-- Groups settings by metadata field in a compact table UI.
-- Uses a field selector based on existing vault frontmatter fields.
-- Stores imported per-field possible values inside Metadata Labels itself.
-- Uses a value selector based on imported possible values and values already found in note frontmatter.
-- Supports smart folder inheritance for enabled folders.
-- Adds context-menu actions for bulk metadata updates across selected notes and folders.
-- Normalises legacy emoji-prefixed values such as `🔴 To Do`, `🟠 In Progress`, and `🟢 Done`.
-- Uses the classic `PluginSettingTab.display()` API for Obsidian 1.12.7 compatibility.
+- File Explorer icons driven by frontmatter field/value rules.
+- Optional File Explorer note and folder name colouring.
+- Note Properties panel value colouring using all matching rule groups.
+- One selected rule group controls File Explorer visuals, preventing competing note/folder colours.
+- Rule targets for notes, folders, or both.
+- Compact grouped settings UI with collapsible rule groups.
+- Drag-and-drop ordering inside each rule group.
+- Default `Editing Status` rules for `To Do`, `In Progress`, and `Done`.
+- Smart folder inheritance for enabled folders.
+- Folder context-menu actions under `Metadata Labels`.
+- Bulk metadata updates for selected notes and folders.
+- Optional one-time import of field definitions from known local sources.
+- Standalone operation after import; no runtime dependency on Metadata Menu or any other plugin.
+- Legacy value normalisation for emoji-prefixed values such as `🔴 To Do`.
+- Classic `PluginSettingTab.display()` settings UI for Obsidian 1.12.7 compatibility.
 
-## Installation For Manual Testing
+## Installation
 
-1. Build the plugin:
+### Manual Installation
+
+1. Download the release files:
+   - `manifest.json`
+   - `main.js`
+   - `styles.css`
+2. Create this folder in your vault:
+
+```text
+<vault>/.obsidian/plugins/metadata-labels
+```
+
+3. Put the three release files into that folder.
+4. In Obsidian, open Settings -> Community plugins.
+5. Reload plugins if needed.
+6. Enable `Metadata Labels`.
+
+### Manual Testing From Source
 
 ```bash
 npm install
 npm run build
 ```
 
-2. Copy or keep the plugin folder at:
+The build writes `main.js` into the plugin directory. Enable the plugin from Obsidian after building.
 
-```text
-<vault>/.obsidian/plugins/obsidian-metadata-labels
-```
+## Usage
 
-3. Make sure the folder contains at least:
+### Create A Rule Group
 
-```text
-manifest.json
-main.js
-styles.css
-```
-
-4. In Obsidian, open Settings -> Community plugins.
-5. Turn off Restricted mode if needed.
-6. Enable `Metadata Labels`.
-
-During local development inside an Obsidian vault, running `npm run build` writes the compiled `main.js` directly into the plugin folder.
-
-## How Rules Work
-
-Rules map one frontmatter field/value pair to one visual effect.
-
-Each rule stores:
-
-- `field`: the frontmatter field to inspect, for example `Editing Status`.
-- `value`: the raw metadata value, for example `Done`.
-- `icon`: an Obsidian/Lucide icon name, for example `circle`.
-- `color`: the colour used for the icon and optionally the filename.
-- `showIcon`: whether the File Explorer row should show the icon.
-- `colourFilename`: whether the note or folder name should be coloured.
-- `target`: whether the rule applies to notes, folders, or both.
-
-The first matching note rule is applied to a note. Rules targeted only at folders are skipped for note matching.
-
-In settings, metadata fields are selected from fields already found in the vault plus fields imported into Metadata Labels' own value registry. Rule values come from a merged list of imported possible values and values already found in note frontmatter.
-
-The `Import field definitions` button looks for supported local field-definition data, imports field names and configured possible values, and saves them into Metadata Labels' own `data.json`. After that one-time import, Metadata Labels does not require the source plugin or definition file to remain installed. If no external definitions are found, the plugin falls back to values already used in notes.
-
-The default setup flow is:
-
-1. Optional: click `Import field definitions` if you have configured possible values in a supported source.
-2. Select a metadata field in the Add rule area.
+1. Open Settings -> Metadata Labels.
+2. In the Rules header, choose a metadata field from the `Select` field.
 3. Click `Add rule`.
-4. Metadata Labels creates one row for every known value, combining imported possible values and values already used in frontmatter.
+4. Metadata Labels imports known field definitions if available, then creates one row for every known value for that field.
 
-If a rule group already exists, use `Add missing rows` to add rows for imported or discovered values that are not yet in the table. Typed row values that are not in the imported/discovered value list are rejected, keeping rule values consistent with known metadata values.
+Known values come from two places:
 
-Values are compared after normalisation. This preserves compatibility with older notes that may have stored status emoji in the metadata value. For example, all of these can match a rule value of `To Do`:
+- values imported into Metadata Labels' own data file;
+- values already found in note frontmatter.
 
-```yaml
-Editing Status: To Do
-Editing Status: 🔴 To Do
-```
+If no external definitions are found, Metadata Labels silently falls back to values found in notes.
 
-## Default Editing Status Rules
+### Configure Rule Rows
 
-If there are no useful rules, the settings tab seeds three default rules:
+Each row maps one raw metadata value to one visual rule.
 
-- `Editing Status = To Do`, icon `circle`, colour `#e03131`
-- `Editing Status = In Progress`, icon `circle`, colour `#f08c00`
-- `Editing Status = Done`, icon `circle`, colour `#2f9e44`
+Columns:
 
-These defaults store clean raw values. The colour and icon are display settings, not part of the metadata value.
+- `Drag`: reorder rows inside the field group.
+- `Value`: read-only metadata value.
+- `Shape`: Obsidian icon name.
+- `Colour`: icon and optional text colour.
+- `Icon`: whether to show the File Explorer icon.
+- `Name`: whether to colour the note/folder name.
+- `Target`: notes, folders, or both.
+- `Preview`: live preview of the visual effect.
+- `Del`: delete that value row.
 
-The default Editing Status group also creates allowed values for `To Do`, `In Progress`, and `Done`, so those values are available even before every status appears in note frontmatter.
+Rows are generated from the field's available values. To change available values, update the source metadata definitions or add values to notes, then create the rule group again.
 
-## Smart Folder Rules
+### Choose The File Explorer Rule Group
 
-Smart folders let a folder inherit a visual status from the notes inside it.
+Only one metadata field group can control File Explorer note and folder visuals at a time.
 
-There are two controls:
+Turn on `Use for File Explorer` for the group that should drive icons and name colours. Enabling it for one group automatically makes that group the active File Explorer source.
 
-- Right-click a folder in the File Explorer and choose `Metadata Labels > Enable smart folder rule`.
-- In the settings page, turn on `Apply to enabled folders` for the metadata field group that should drive folder inheritance.
+Metadata/property colouring still uses all matching rule groups.
 
-The folder path is stored internally. The settings page does not list enabled folders, keeping the settings UI compact.
+### Colour Note Properties
 
-For Editing Status, the plugin inspects descendant markdown notes that have the relevant metadata field. Folder-note/dashboard files that directly represent the folder are ignored. Values are normalised, so emoji-prefixed values still count.
+The global `Colour note metadata` toggle controls colouring inside Obsidian's visible note Properties panel.
 
-Folder status aggregation is:
+When enabled, matching property values use the same rule colour:
 
-- no counted child statuses -> no folder rule
-- any child is `In Progress` -> folder is `In Progress`
-- at least one child is `Done` and at least one child is `To Do` -> folder is `In Progress`
-- one or more children are `Done` and none are `To Do` -> folder is `Done`
-- one or more children are `To Do` and none are `Done` -> folder is `To Do`
-- otherwise -> no folder rule
+- `Editing Status: To Do` can be red.
+- `Editing Stage: Published` can use the configured Editing Stage colour.
+- `Importance: Critical` can use the configured Importance colour.
 
-The calculated folder status is mapped back to the existing rule list, so folders inherit the configured shape, colour, icon visibility, filename colour, and target behaviour.
+Only matching field/value pairs are coloured. Unrelated property values are left alone.
 
-## Bulk Metadata Updates
+### Smart Folder Rules
 
-Metadata Labels adds bulk update actions to the File Explorer context menu.
+Smart folders let a folder inherit a visual status from descendant notes.
 
-For example:
+1. Right-click a folder in the File Explorer.
+2. Choose `Metadata Labels > Enable smart folder rule`.
+3. In settings, enable `Apply to enabled folders` for the active File Explorer rule group.
+
+For Editing Status-style workflows, folder aggregation is:
+
+- no counted child statuses -> no folder rule;
+- any child is `In Progress` -> folder is `In Progress`;
+- at least one child is `Done` and at least one is `To Do` -> folder is `In Progress`;
+- one or more children are `Done` and none are `To Do` -> folder is `Done`;
+- one or more children are `To Do` and none are `Done` -> folder is `To Do`.
+
+Folder-note/dashboard files that directly represent the folder are ignored so a folder status reflects descendant manuscript/project notes rather than the folder's own summary page.
+
+### Bulk Metadata Updates
+
+Metadata Labels adds bulk update actions to File Explorer context menus:
 
 ```text
 Metadata Labels >
@@ -144,18 +153,26 @@ Metadata Labels >
     Done
 ```
 
-The submenu groups are generated from the existing rule list. Selecting a value writes the raw rule value into frontmatter.
-
 Bulk updates support:
 
-- a single selected note
-- multiple selected notes
-- selected folders
-- mixed note and folder selections
+- selected markdown notes;
+- selected folders;
+- mixed note and folder selections;
+- overlapping folder selections without updating the same note twice.
 
-When a folder is selected, all descendant markdown notes are updated. If selected folders overlap, each markdown note is updated only once. Existing frontmatter is preserved, and notes without frontmatter receive a new frontmatter block.
+Selected folders update every descendant markdown note. Existing frontmatter is preserved, and missing frontmatter is created.
 
-After a bulk update, File Explorer visuals are refreshed and smart folder inheritance recalculates from the changed metadata.
+## Field Definition Import
+
+Metadata Labels can import configured field values from known local definition files, currently including Metadata Menu's `data.json` when present.
+
+The import is optional and one-time:
+
+- imported values are copied into Metadata Labels' own `data.json`;
+- Metadata Labels continues to work if the source plugin is disabled or removed;
+- no runtime dependency is created.
+
+The import helps with values that are configured but not yet used in any note.
 
 ## Compatibility
 
@@ -164,11 +181,11 @@ Metadata Labels is maintained for Obsidian 1.12.7 compatibility.
 Important compatibility choices:
 
 - `manifest.json` keeps `minAppVersion` at `1.0.0`.
-- The settings tab uses the classic `PluginSettingTab.display()` API.
+- The settings tab uses classic `PluginSettingTab.display()`.
 - The plugin does not use `getSettingDefinitions()`.
-- Frontmatter writes use older official Vault read/modify APIs instead of newer helpers that would raise the minimum supported Obsidian version.
+- Frontmatter writes use `Vault.read` and `Vault.modify` instead of newer frontmatter helper APIs.
 
-Lint may warn that `display()` is deprecated in newer Obsidian versions. That warning is expected for this compatibility target.
+ESLint may warn that `display()` is deprecated for newer Obsidian versions. That warning is expected for this compatibility target.
 
 ## Development
 
@@ -196,7 +213,7 @@ Run ESLint:
 npm run lint
 ```
 
-The production build runs TypeScript with:
+The production build runs TypeScript first:
 
 ```bash
 tsc -noEmit -skipLibCheck
@@ -204,13 +221,33 @@ tsc -noEmit -skipLibCheck
 
 and then bundles the plugin with esbuild.
 
-## Repository Notes
+## Release Checklist
 
-The repository intentionally excludes local runtime files:
+Before publishing a GitHub release:
 
-- `node_modules`
-- `main.js`
-- `data.json`
-- source maps
+1. Run `npm run build`.
+2. Run `npm run lint`.
+3. Upload `manifest.json`, `main.js`, and `styles.css` as release assets.
+4. Confirm `manifest.json`, `versions.json`, and `package.json` versions match.
+5. Add screenshots to this README.
 
-For manual plugin testing, `main.js` must still exist in the Obsidian plugin folder after running `npm run build`.
+## Roadmap
+
+- Icon picker instead of a text/dropdown-only icon chooser.
+- More field-definition import adapters.
+- Optional colour presets for common writing workflows.
+- Better mobile settings layout.
+- Automated tests for frontmatter mutation and smart folder aggregation.
+
+## Support And Bug Reports
+
+Report bugs and feature requests here:
+
+- Issues: https://github.com/anthony/obsidian-metadata-labels/issues
+- Discussions: https://github.com/anthony/obsidian-metadata-labels/discussions
+
+These links are placeholders until the public GitHub repository is created.
+
+## License
+
+Metadata Labels is released under the 0BSD license. See [LICENSE](LICENSE).

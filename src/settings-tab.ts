@@ -1,5 +1,6 @@
 import {
 	App,
+	ButtonComponent,
 	ColorComponent,
 	DropdownComponent,
 	ExtraButtonComponent,
@@ -48,6 +49,11 @@ const WORKFLOW_VALUE_COLORS: Record<string, string> = {
 	Done: '#2f9e44',
 };
 
+interface FieldDefinitionImportResult {
+	foundDefinitions: boolean;
+	changed: boolean;
+}
+
 interface FieldSelector {
 	inputEl: HTMLInputElement;
 	value: string;
@@ -62,6 +68,8 @@ interface FieldSelector {
  * rules without large repeated cards.
  */
 export class MetadataLabelsSettingsTab extends PluginSettingTab {
+	private hasAttemptedInitialFieldImport = false;
+
 	constructor(
 		app: App,
 		private readonly plugin: MetadataLabelsPlugin,
@@ -82,6 +90,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		this.normalizeRuleValues();
 		this.normalizeAllowedValues();
 		this.ensureDefaultRules();
+		this.importFieldDefinitionsOnFirstDisplay();
 
 		const fields = this.getKnownMetadataFields();
 
@@ -95,56 +104,102 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		});
 		headerEl.createDiv({
 			cls: 'metadata-labels-settings-description',
-			text: 'Create Scrivener-style labels from frontmatter metadata.',
+			text: 'Create visual labels from frontmatter metadata.',
 		});
 
 		const actionsEl = containerEl.createDiv('metadata-labels-actions');
+		const actionsTextEl = actionsEl.createDiv('metadata-labels-actions-text');
+		const actionsControlsEl = actionsEl.createDiv('metadata-labels-actions-controls');
 		const existingGroupFields = new Set(
 			Array.from(this.groupRulesByField().keys()),
 		);
 		const availableNewFields = fields.filter((field) => !existingGroupFields.has(field));
-		let selectedNewField = availableNewFields[0] ?? '';
+		let selectedNewField = '';
 		let addRuleButtonEl: HTMLButtonElement | null = null;
 
-		new Setting(actionsEl)
-			.setName('Rules')
-			.setDesc('Create a label group from a known metadata field.')
-			.addText((text) => {
-				this.configureFieldSelector(
-					text,
-					selectedNewField,
-					availableNewFields,
-					(value) => {
-						selectedNewField = value;
-						if (addRuleButtonEl) {
-							addRuleButtonEl.disabled = selectedNewField === '';
-						}
-					},
-				);
-			})
-			.addButton((button) => {
-				button
-					.setButtonText('Import field definitions')
-					.onClick(async () => {
-						await this.importFieldDefinitions();
-						this.display();
-					});
-			})
-			.addButton((button) => {
-				addRuleButtonEl = button.buttonEl;
-				addRuleButtonEl.disabled = selectedNewField === '';
-				button
-					.setButtonText('Add rule')
-					.onClick(async () => {
-						if (selectedNewField === '') {
-							return;
-						}
+		actionsTextEl.createDiv({
+			cls: 'metadata-labels-actions-title',
+			text: 'Rules',
+		});
+		actionsTextEl.createDiv({
+			cls: 'metadata-labels-actions-description',
+			text: 'Create a label group from a known metadata field.',
+		});
 
-						this.plugin.settings.rules.push(...this.createRulesForFieldValues(selectedNewField));
+		const metadataToggleEl = actionsControlsEl.createEl('label', {
+			cls: 'metadata-labels-action-toggle',
+		});
+		const metadataToggle = new Setting(metadataToggleEl)
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.colourMetadata)
+					.onChange(async (value) => {
+						this.plugin.settings.colourMetadata = value;
 						await this.plugin.saveSettings();
-						this.display();
 					});
+				toggle.toggleEl.setAttribute('aria-label', 'Colour note metadata');
 			});
+		metadataToggle.settingEl.addClass('metadata-labels-control-setting');
+		metadataToggleEl.createSpan({
+			cls: 'metadata-labels-inline-toggle-label',
+			text: 'Colour note metadata',
+		});
+
+		const fieldSelectorEl = actionsControlsEl.createDiv('metadata-labels-action-field');
+		fieldSelectorEl.createSpan({
+			cls: 'metadata-labels-action-field-label',
+			text: 'Field',
+		});
+		const fieldSelector = new TextComponent(fieldSelectorEl);
+		this.configureFieldSelector(
+			fieldSelector,
+			selectedNewField,
+			availableNewFields,
+			(value) => {
+				selectedNewField = value;
+				if (addRuleButtonEl) {
+					addRuleButtonEl.disabled = selectedNewField === '';
+				}
+			},
+		);
+		fieldSelector.setPlaceholder('Select');
+
+		const addRuleButton = new ButtonComponent(actionsControlsEl)
+			.setButtonText('Add rule')
+			.onClick(async () => {
+				if (selectedNewField === '') {
+					return;
+				}
+
+				const importResult = await this.importFieldDefinitions();
+				const existingFields = new Set(
+					Array.from(this.groupRulesByField().keys())
+						.filter((field) => field !== selectedNewField),
+				);
+				const refreshedFields = this.getKnownMetadataFields()
+					.filter((field) => !existingFields.has(field));
+
+				if (!refreshedFields.includes(selectedNewField)) {
+					selectedNewField = '';
+					this.display();
+					return;
+				}
+
+				if (importResult.foundDefinitions) {
+					new Notice('Imported field definitions.');
+				} else {
+					new Notice('No field definitions found; using values found in notes.');
+				}
+
+				this.setCollapsedRuleGroup(selectedNewField, false);
+				this.plugin.settings.rules.push(...this.createRulesForFieldValues(selectedNewField));
+				await this.plugin.saveSettings();
+				this.display();
+			});
+
+		addRuleButtonEl = addRuleButton.buttonEl;
+		addRuleButtonEl.disabled = selectedNewField === '';
+		addRuleButtonEl.addClass('metadata-labels-action-button');
 
 		for (const [field, rules] of this.groupRulesByField()) {
 			this.renderRuleGroup(containerEl, field, rules);
@@ -152,11 +207,36 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	}
 
 	/**
+	 * Quietly imports known external field definitions the first time settings
+	 * open.
+	 *
+	 * The Add rule selector is intentionally blank until the user chooses a
+	 * field, but it still needs to know about fields whose possible values live
+	 * in an external definition file and have not appeared in frontmatter yet.
+	 * This one-time import keeps the UI standalone after the definitions are
+	 * copied into Metadata Labels data, and it avoids showing a notice just for
+	 * opening settings.
+	 */
+	private importFieldDefinitionsOnFirstDisplay(): void {
+		if (this.hasAttemptedInitialFieldImport) {
+			return;
+		}
+
+		this.hasAttemptedInitialFieldImport = true;
+		void this.importFieldDefinitions().then((result) => {
+			if (result.changed) {
+				this.display();
+			}
+		});
+	}
+
+	/**
 	 * Renders one metadata field group, such as "Editing Status".
 	 *
-	 * Each group owns a field selector, the "Apply to enabled folders" smart
-	 * folder toggle, an Add row button for another value under the same field,
-	 * and a Delete rule button that removes the entire group.
+	 * Each group shows its metadata field as read-only text, the "Apply to
+	 * enabled folders" smart folder toggle, the exclusive "Use for File Explorer"
+	 * toggle, and a Delete rule button that removes the entire group. Field
+	 * selection happens only when creating a new group.
 	 */
 	private renderRuleGroup(
 		containerEl: HTMLElement,
@@ -166,27 +246,58 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		const groupEl = containerEl.createDiv('metadata-labels-rule-group');
 		const headerEl = groupEl.createDiv('metadata-labels-rule-group-header');
 		const titleEl = headerEl.createDiv('metadata-labels-rule-group-title');
+		const controlsEl = headerEl.createDiv('metadata-labels-rule-group-controls');
+		const actionsEl = headerEl.createDiv('metadata-labels-rule-group-actions');
+		const isCollapsed = this.isRuleGroupCollapsed(field);
 
-		titleEl.createDiv({
-			cls: 'metadata-labels-field-label',
-			text: 'Metadata field',
-		});
-		const fieldInput = new TextComponent(titleEl);
-
-		this.configureFieldSelector(fieldInput, field, this.getKnownMetadataFields(), async (value) => {
-			for (const rule of rules) {
-				rule.field = value;
+		groupEl.toggleClass('is-collapsed', isCollapsed);
+		headerEl.addEventListener('click', (event) => {
+			if (this.isInteractiveHeaderClick(event)) {
+				return;
 			}
 
-			await this.plugin.saveSettings();
-			this.display();
+			void this.setRuleGroupCollapsed(field, !this.isRuleGroupCollapsed(field));
 		});
+
+		const fieldTitleEl = titleEl.createDiv('metadata-labels-field-title-row');
+		const disclosureEl = fieldTitleEl.createSpan({
+			cls: 'metadata-labels-rule-group-disclosure',
+			text: isCollapsed ? '▸' : '▾',
+		});
+		fieldTitleEl.createSpan({
+			cls: 'metadata-labels-field-name',
+			text: field,
+		});
+
+		disclosureEl.setAttribute('aria-hidden', 'true');
 		titleEl.createDiv({
 			cls: 'metadata-labels-field-count',
 			text: `${rules.length} ${rules.length === 1 ? 'label' : 'labels'}`,
 		});
 
-		new Setting(headerEl)
+		new Setting(controlsEl)
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.fileExplorerField === field)
+					.onChange(async (value) => {
+						if (value) {
+							this.plugin.settings.fileExplorerField = field;
+						} else if (this.plugin.settings.fileExplorerField === field) {
+							this.plugin.settings.fileExplorerField = '';
+						}
+
+						await this.plugin.saveSettings();
+						this.display();
+					});
+				toggle.toggleEl.setAttribute('aria-label', 'Use for File Explorer');
+				toggle.toggleEl.insertAdjacentElement(
+					'afterend',
+					createSpan({
+						cls: 'metadata-labels-inline-toggle-label',
+						text: 'Use for File Explorer',
+					}),
+				);
+			})
 			.addToggle((toggle) => {
 				toggle
 					.setValue(this.plugin.settings.smartFolderFields.includes(field))
@@ -198,31 +309,13 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 				toggle.toggleEl.insertAdjacentElement(
 					'afterend',
 					createSpan({
-						cls: 'metadata-labels-smart-folder-toggle-label',
+						cls: 'metadata-labels-inline-toggle-label',
 						text: 'Apply to enabled folders',
 					}),
 				);
-			})
-			.addButton((button) => {
-				button
-					.setButtonText('Add missing rows')
-					.onClick(async () => {
-						this.addMissingRowsForField(field, rules);
-						await this.plugin.saveSettings();
-						this.display();
-					});
-			})
-			.addButton((button) => {
-				button
-					.setButtonText('Add row')
-					.onClick(async () => {
-						this.plugin.settings.rules.push(
-							this.createRuleForField(field, this.getRuleValuesForField(field)[0] ?? ''),
-						);
-						await this.plugin.saveSettings();
-						this.display();
-					});
-			})
+			});
+
+		new Setting(actionsEl)
 			.addButton((button) => {
 				button
 					.setButtonText('Delete rule')
@@ -235,15 +328,20 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 							}
 						}
 
+						this.setCollapsedRuleGroup(field, false);
 						await this.plugin.saveSettings();
 						this.display();
 					});
 			});
 
+		if (isCollapsed) {
+			return;
+		}
+
 		const tableEl = groupEl.createDiv('metadata-labels-rule-table');
 		const tableHeaderEl = tableEl.createDiv('metadata-labels-rule-table-header');
 
-		for (const label of ['Value', 'Shape', 'Colour', 'Icon', 'Name', 'Target', 'Preview', 'Order', 'Del']) {
+		for (const label of ['Drag', 'Value', 'Shape', 'Colour', 'Icon', 'Name', 'Target', 'Preview', 'Del']) {
 			tableHeaderEl.createDiv({
 				cls: 'metadata-labels-rule-table-heading',
 				text: label,
@@ -253,6 +351,60 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		for (const [index, rule] of rules.entries()) {
 			this.renderRule(tableEl, rule, rules, index);
 		}
+	}
+
+	/**
+	 * Returns whether a field group is currently collapsed in the settings UI.
+	 */
+	private isRuleGroupCollapsed(field: string): boolean {
+		return this.plugin.settings.collapsedRuleGroups.includes(field);
+	}
+
+	/**
+	 * Persists one field group's collapsed/expanded state.
+	 */
+	private setCollapsedRuleGroup(field: string, collapsed: boolean): void {
+		const collapsedRuleGroups = this.plugin.settings.collapsedRuleGroups;
+
+		if (collapsed) {
+			if (!collapsedRuleGroups.includes(field)) {
+				collapsedRuleGroups.push(field);
+				collapsedRuleGroups.sort((a, b) => a.localeCompare(b));
+			}
+
+			return;
+		}
+
+		this.plugin.settings.collapsedRuleGroups = collapsedRuleGroups
+			.filter((collapsedField) => collapsedField !== field);
+	}
+
+	/**
+	 * Updates one group's collapsed state and redraws the settings page.
+	 */
+	private async setRuleGroupCollapsed(field: string, collapsed: boolean): Promise<void> {
+		this.setCollapsedRuleGroup(field, collapsed);
+		await this.plugin.saveSettings();
+		this.display();
+	}
+
+	/**
+	 * Prevents clicks on real controls from also toggling the disclosure state.
+	 */
+	private isInteractiveHeaderClick(event: MouseEvent): boolean {
+		const targetEl = event.target;
+
+		return targetEl instanceof HTMLElement
+			&& targetEl.closest([
+				'input',
+				'button',
+				'select',
+				'textarea',
+				'a',
+				'.clickable-icon',
+				'.metadata-labels-rule-group-controls',
+				'.metadata-labels-rule-group-actions',
+			].join(', ')) !== null;
 	}
 
 	/**
@@ -270,6 +422,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		index: number,
 	): void {
 		const rowEl = tableEl.createDiv('metadata-labels-rule-table-row');
+		const dragEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-drag-cell');
 		const valueEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-value-cell');
 		const iconEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-icon-cell');
 		const colorEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-colour-cell');
@@ -277,7 +430,6 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		const colourNameEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-colour-name-cell');
 		const targetEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-target-cell');
 		const previewEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-preview-cell');
-		const orderEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-order-cell');
 		const deleteEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-delete-cell');
 		const previewIconEl = previewEl.createSpan('metadata-labels-rule-preview-icon');
 		const previewTextEl = previewEl.createSpan({
@@ -285,6 +437,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			text: rule.value || 'New label',
 		});
 
+		dragEl.setAttribute('data-label', 'Drag');
 		valueEl.setAttribute('data-label', 'Value');
 		iconEl.setAttribute('data-label', 'Shape');
 		colorEl.setAttribute('data-label', 'Colour');
@@ -292,25 +445,15 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		colourNameEl.setAttribute('data-label', 'Name');
 		targetEl.setAttribute('data-label', 'Target');
 		previewEl.setAttribute('data-label', 'Preview');
-		orderEl.setAttribute('data-label', 'Order');
 		deleteEl.setAttribute('data-label', 'Del');
 
+		this.configureDragHandle(rowEl, dragEl, rules, index);
 		this.updatePreview(previewIconEl, previewTextEl, rule);
 
-		const valueInput = new TextComponent(valueEl);
-		const valueDisplayEl = valueEl.createDiv({
-			cls: 'metadata-labels-value-display',
+		valueEl.createSpan({
+			cls: 'metadata-labels-value-text',
 			text: rule.value || 'New label',
 		});
-
-		valueInput.inputEl.setAttribute('aria-label', 'Metadata value');
-		this.configureValueSelector(valueInput, rule, this.getRuleValuesForField(rule.field), async (value) => {
-			rule.value = value;
-			valueDisplayEl.setText(value || 'New label');
-			this.updatePreview(previewIconEl, previewTextEl, rule);
-			await this.plugin.saveSettings();
-		});
-		valueDisplayEl.setText(rule.value || 'New label');
 		this.updatePreview(previewIconEl, previewTextEl, rule);
 
 		const iconDropdown = new DropdownComponent(iconEl);
@@ -390,32 +533,6 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			});
 
-		const moveUpButton = new ExtraButtonComponent(orderEl)
-			.setIcon('arrow-up');
-		this.configureRowOrderButton(
-			moveUpButton,
-			index === 0,
-			'Move rule up',
-			async () => {
-				this.moveRuleWithinGroup(rules, index, -1);
-				await this.plugin.saveSettings();
-				this.display();
-			},
-		);
-
-		const moveDownButton = new ExtraButtonComponent(orderEl)
-			.setIcon('arrow-down');
-		this.configureRowOrderButton(
-			moveDownButton,
-			index >= rules.length - 1,
-			'Move rule down',
-			async () => {
-				this.moveRuleWithinGroup(rules, index, 1);
-				await this.plugin.saveSettings();
-				this.display();
-			},
-		);
-
 		const deleteButton = new ExtraButtonComponent(deleteEl);
 
 		deleteButton.extraSettingsEl.setAttribute('aria-label', 'Delete rule');
@@ -435,56 +552,108 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	}
 
 	/**
-	 * Configures an order button while keeping Obsidian 1.12.7 compatibility.
+	 * Configures native browser drag/drop for one table row.
 	 *
-	 * ExtraButtonComponent did not expose a stable disabled API in older
-	 * versions, so disabled edge buttons are visually muted and marked with
-	 * aria-disabled. Click handlers are only registered for active buttons.
+	 * Dragging is limited to the current metadata field group because the
+	 * handler receives that group's rules array and only moves rows between
+	 * indexes inside it. The stored settings array is reordered directly so the
+	 * matcher continues to use the same persisted order after restart.
 	 */
-	private configureRowOrderButton(
-		button: ExtraButtonComponent,
-		disabled: boolean,
-		label: string,
-		onClick: () => Promise<void>,
+	private configureDragHandle(
+		rowEl: HTMLElement,
+		dragEl: HTMLElement,
+		rules: MetadataLabelRule[],
+		index: number,
 	): void {
-		button.extraSettingsEl.setAttribute('aria-label', label);
-		button.extraSettingsEl.setAttribute('title', label);
-		button.extraSettingsEl.toggleClass('is-disabled', disabled);
-		button.extraSettingsEl.setAttribute('aria-disabled', String(disabled));
+		const handleEl = dragEl.createSpan({
+			cls: 'metadata-labels-drag-handle',
+			text: '☰',
+		});
 
-		if (!disabled) {
-			button.onClick(onClick);
-		}
+		handleEl.setAttribute('aria-label', 'Drag rule');
+		handleEl.setAttribute('title', 'Drag rule');
+		rowEl.draggable = true;
+
+		rowEl.addEventListener('dragstart', (event) => {
+			rowEl.addClass('metadata-labels-rule-row-dragging');
+			event.dataTransfer?.setData('text/plain', String(index));
+			event.dataTransfer?.setDragImage(rowEl, 12, 12);
+			if (event.dataTransfer) {
+				event.dataTransfer.effectAllowed = 'move';
+			}
+		});
+
+		rowEl.addEventListener('dragend', () => {
+			rowEl.removeClass('metadata-labels-rule-row-dragging');
+		});
+
+		rowEl.addEventListener('dragover', (event) => {
+			event.preventDefault();
+			rowEl.addClass('metadata-labels-rule-row-drop-target');
+			if (event.dataTransfer) {
+				event.dataTransfer.dropEffect = 'move';
+			}
+		});
+
+		rowEl.addEventListener('dragleave', () => {
+			rowEl.removeClass('metadata-labels-rule-row-drop-target');
+		});
+
+		rowEl.addEventListener('drop', (event) => {
+			event.preventDefault();
+			rowEl.removeClass('metadata-labels-rule-row-drop-target');
+
+			const fromIndex = Number(event.dataTransfer?.getData('text/plain'));
+
+			if (!Number.isInteger(fromIndex) || fromIndex === index) {
+				return;
+			}
+
+			this.moveRuleWithinGroup(rules, fromIndex, index);
+			void this.plugin.saveSettings().then(() => this.display());
+		});
 	}
 
 	/**
-	 * Moves one rule within its metadata-field group by swapping the underlying
-	 * entries in plugin.settings.rules.
+	 * Moves one rule within its metadata-field group by splicing the underlying
+	 * plugin.settings.rules array.
 	 *
 	 * The matcher already respects settings order, so persisting the reordered
 	 * array is enough for both immediate preview redraws and restart persistence.
 	 */
 	private moveRuleWithinGroup(
 		rules: MetadataLabelRule[],
-		index: number,
-		direction: -1 | 1,
+		fromIndex: number,
+		toIndex: number,
 	): void {
-		const targetRule = rules[index + direction];
-		const currentRule = rules[index];
+		const movedRule = rules[fromIndex];
+		const targetRule = rules[toIndex];
 
-		if (!currentRule || !targetRule) {
+		if (!movedRule || !targetRule) {
 			return;
 		}
 
-		const currentIndex = this.plugin.settings.rules.indexOf(currentRule);
+		const currentIndex = this.plugin.settings.rules.indexOf(movedRule);
 		const targetIndex = this.plugin.settings.rules.indexOf(targetRule);
 
 		if (currentIndex < 0 || targetIndex < 0) {
 			return;
 		}
 
-		this.plugin.settings.rules[currentIndex] = targetRule;
-		this.plugin.settings.rules[targetIndex] = currentRule;
+		const [removedRule] = this.plugin.settings.rules.splice(currentIndex, 1);
+
+		if (!removedRule) {
+			return;
+		}
+
+		const insertionIndex = this.plugin.settings.rules.indexOf(targetRule);
+
+		if (insertionIndex < 0) {
+			this.plugin.settings.rules.splice(currentIndex, 0, removedRule);
+			return;
+		}
+
+		this.plugin.settings.rules.splice(insertionIndex, 0, removedRule);
 	}
 
 	/**
@@ -550,88 +719,6 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		});
 
 		return selector;
-	}
-
-	/**
-	 * Configures a text input as a constrained value selector for one metadata
-	 * field.
-	 *
-	 * The selector uses normalised values collected from notes that already have
-	 * the row's metadata field. This keeps stored rule values clean and prevents
-	 * typos from creating rules that cannot match the vault. Invalid typed values
-	 * are rejected and the input returns to the last valid selected value.
-	 */
-	private configureValueSelector(
-		text: TextComponent,
-		rule: MetadataLabelRule,
-		values: string[],
-		onSelect: (value: string) => void | Promise<void>,
-	): void {
-		const inputEl = text.inputEl;
-		const normalizedRuleValue = this.normalizeStatusValue(rule.value);
-		const initialValue = values.length === 0
-			? normalizedRuleValue
-			: values.includes(normalizedRuleValue)
-			? normalizedRuleValue
-			: values[0] ?? '';
-		const listId = `metadata-labels-values-${crypto.randomUUID()}`;
-		const dataListEl = inputEl.parentElement?.createEl('datalist');
-
-		if (rule.value !== initialValue) {
-			rule.value = initialValue;
-			void this.plugin.saveSettings();
-		}
-
-		if (dataListEl) {
-			dataListEl.id = listId;
-			inputEl.setAttribute('list', listId);
-
-			for (const value of values) {
-				dataListEl.createEl('option', { attr: { value } });
-			}
-		}
-
-		inputEl.setAttribute('autocomplete', 'off');
-		inputEl.setAttribute('aria-label', 'Metadata value');
-
-		let selectedValue = initialValue;
-
-		text
-			.setValue(selectedValue)
-			.setPlaceholder(values.length > 0 ? 'Search values' : 'No values found')
-			.onChange((nextValue) => {
-				const normalizedValue = this.normalizeStatusValue(nextValue);
-
-				if (!values.includes(normalizedValue)) {
-					return;
-				}
-
-				selectedValue = normalizedValue;
-				inputEl.value = selectedValue;
-				void onSelect(selectedValue);
-			});
-		inputEl.disabled = values.length === 0;
-
-		inputEl.addEventListener('change', () => {
-			const normalizedValue = this.normalizeStatusValue(inputEl.value);
-
-			if (!values.includes(normalizedValue)) {
-				inputEl.value = selectedValue;
-				return;
-			}
-
-			selectedValue = normalizedValue;
-			inputEl.value = selectedValue;
-			void onSelect(selectedValue);
-		});
-
-		inputEl.addEventListener('blur', () => {
-			const normalizedValue = this.normalizeStatusValue(inputEl.value);
-
-			if (!values.includes(normalizedValue)) {
-				inputEl.value = selectedValue;
-			}
-		});
 	}
 
 	/**
@@ -706,42 +793,59 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	}
 
 	/**
-	 * Creates a complete new rule group from every known value for a field.
+	 * Creates a complete rule group from every known value for a field.
 	 *
-	 * Add rule is intentionally broader than Add row: when a user chooses a
-	 * metadata field, the settings page starts with rows for configured values
-	 * and values already seen in frontmatter. If no values exist yet, the method
-	 * preserves the old behaviour by returning one blank row.
+	 * Rule rows are no longer manually added inside a group. A group is born
+	 * from the field's available value list, which is why Add rule performs an
+	 * import refresh before calling this method. The optional existingRules
+	 * argument is retained for migration/rebuild scenarios where visual row
+	 * configuration should be copied by matching normalised values.
 	 */
-	private createRulesForFieldValues(field: string): MetadataLabelRule[] {
+	private createRulesForFieldValues(
+		field: string,
+		existingRules: MetadataLabelRule[] = [],
+	): MetadataLabelRule[] {
 		const values = this.getRuleValuesForField(field);
+		const existingRulesByValue = new Map(
+			existingRules.map((rule) => [this.normalizeStatusValue(rule.value), rule]),
+		);
 
 		if (values.length === 0) {
-			return [this.createRuleForField(field)];
+			const existingBlankRule = existingRulesByValue.get('');
+
+			return [existingBlankRule
+				? this.copyRuleForField(existingBlankRule, field, '')
+				: this.createRuleForField(field)];
 		}
 
-		return values.map((value) => this.createRuleForField(field, value));
+		return values.map((value) => {
+			const existingRule = existingRulesByValue.get(value);
+
+			return existingRule
+				? this.copyRuleForField(existingRule, field, value)
+				: this.createRuleForField(field, value);
+		});
 	}
 
 	/**
-	 * Adds rows for known values that are not already represented by the field's
-	 * rule table.
+	 * Copies an existing row's visual configuration onto a regenerated field
+	 * value.
 	 *
-	 * Known values include both imported/plugin-owned potential values and
-	 * values discovered in frontmatter. This lets a field use values that have
-	 * not appeared in notes yet while still remaining useful without an import.
+	 * The new id is deliberate: the regenerated row represents a fresh field/
+	 * value slot even though it inherits visual choices such as icon, colour,
+	 * target, and filename colouring from a previous row.
 	 */
-	private addMissingRowsForField(field: string, rules: MetadataLabelRule[]): void {
-		const existingValues = new Set(
-			rules.map((rule) => this.normalizeStatusValue(rule.value)),
-		);
-
-		for (const value of this.getRuleValuesForField(field)) {
-			if (!existingValues.has(value)) {
-				this.plugin.settings.rules.push(this.createRuleForField(field, value));
-				existingValues.add(value);
-			}
-		}
+	private copyRuleForField(
+		rule: MetadataLabelRule,
+		field: string,
+		value: string,
+	): MetadataLabelRule {
+		return {
+			...rule,
+			id: crypto.randomUUID(),
+			field,
+			value,
+		};
 	}
 
 	/**
@@ -838,20 +942,19 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	 * and configured values into its own data.json, and then operates
 	 * independently from that point onward.
 	 */
-	private async importFieldDefinitions(): Promise<void> {
+	private async importFieldDefinitions(): Promise<FieldDefinitionImportResult> {
 		const definitions = await this.readMetadataMenuFieldDefinitions();
 
 		if (definitions.size === 0) {
-			new Notice('No external field definitions found. Only values already used in notes can be discovered.');
-			return;
+			return {
+				changed: false,
+				foundDefinitions: false,
+			};
 		}
 
 		let changed = false;
-		let importedValueCount = 0;
 
 		for (const [field, values] of definitions) {
-			importedValueCount += values.length;
-
 			const existingValues = this.plugin.settings.allowedValues[field] ?? [];
 			const mergedValues = this.sortMetadataValues(
 				this.deduplicateValues([...existingValues, ...values])
@@ -870,7 +973,10 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			await this.plugin.saveSettings();
 		}
 
-		new Notice(`Imported ${definitions.size} fields and ${importedValueCount} values.`);
+		return {
+			changed,
+			foundDefinitions: true,
+		};
 	}
 
 	/**
