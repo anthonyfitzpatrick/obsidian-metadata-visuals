@@ -204,9 +204,9 @@ For each matching note:
 
 Rule order matters within the selected group. The first matching rule wins.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 07 placeholder:</strong> Upload a File Explorer screenshot named <code>screenshots/file-explorer-labels.png</code>. It should show note rows with Metadata Visuals icons and/or coloured note names. Include at least three notes representing different values, such as <code>To Do</code>, <code>In Progress</code>, and <code>Done</code>, so the colour differences are clear.
-</div>
+<p align="center">
+  <img src="screenshots/file-explorer-labels.png" alt="Metadata Visuals rule table with colour picker open for a rule colour." width="760">
+</p>
 
 ## Note Properties Colouring
 
