@@ -346,8 +346,13 @@ This is useful when a field has possible values that have not been used in any n
 
 Import runs quietly when the settings page opens and again before a new rule group is created. If no supported definition file exists, Metadata Visuals falls back to values already used in notes. The plugin remains fully standalone after import because it stores imported values in its own `data.json`.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 12 placeholder:</strong> Upload a field-import result screenshot named <code>screenshots/imported-field-values.png</code>. It should show a newly added rule group populated with values that came from imported field definitions, such as an <code>Editing Stage</code> group with many stage rows including values that are not currently used in notes.
+<div align="center">
+  <p><strong>Before</strong></p>
+  <img src="screenshots/imported-field-values.png" alt="Before field import: Metadata Visuals field selector showing available metadata fields." width="760">
+  <br>
+  <br>
+  <p><strong>After</strong></p>
+  <img src="screenshots/imported-field-values-after.png" alt="After field import: Metadata Visuals rule group populated with many imported Locations values." width="760">
 </div>
 
 ## About And Support Footer
