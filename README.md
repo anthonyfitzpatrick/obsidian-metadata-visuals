@@ -71,6 +71,8 @@ The build writes `main.js` into the plugin directory. Enable the plugin from Obs
 
 ## Usage
 
+For a complete walkthrough, see [USER_GUIDE.md](USER_GUIDE.md).
+
 ### Create A Rule Group
 
 1. Open Settings -> Metadata Labels.
