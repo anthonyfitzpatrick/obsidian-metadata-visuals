@@ -259,9 +259,9 @@ Aggregation:
 
 The folder then uses the matching rule's shape, colour, icon toggle, name toggle, and target setting.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 09 placeholder:</strong> Upload a smart folder screenshot named <code>screenshots/smart-folder-inheritance.png</code>. It should show a folder row in the File Explorer inheriting an icon or coloured name from descendant notes. Ideally include the expanded folder contents below it so readers can see child notes with statuses that explain the inherited folder state.
-</div>
+<p align="center">
+  <img src="screenshots/smart-folder-inheritance.png" alt="File Explorer showing a smart folder and descendant notes inheriting Metadata Visuals icons and colours." width="380">
+</p>
 
 ## Folder Context Menu
 
