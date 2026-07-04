@@ -204,6 +204,123 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		for (const [field, rules] of this.groupRulesByField()) {
 			this.renderRuleGroup(containerEl, field, rules);
 		}
+
+		this.renderAboutFooter(containerEl);
+	}
+
+	/**
+	 * Renders the compact About / Support footer at the bottom of settings.
+	 *
+	 * The version comes from Obsidian's loaded plugin manifest rather than from
+	 * a duplicated constant, so the footer stays correct after normal version
+	 * bumps. Links are opened through Obsidian's runtime external opener when it
+	 * is available, with a browser window fallback for older typings/runtimes.
+	 */
+	private renderAboutFooter(containerEl: HTMLElement): void {
+		const footerEl = containerEl.createDiv('metadata-labels-about-footer');
+		const identityEl = footerEl.createDiv('metadata-labels-about-identity');
+
+		identityEl.createDiv({
+			cls: 'metadata-labels-about-title',
+			text: 'Metadata Labels',
+		});
+		identityEl.createDiv({
+			cls: 'metadata-labels-about-version',
+			text: `Version ${this.plugin.manifest.version}`,
+		});
+		identityEl.createDiv({
+			cls: 'metadata-labels-about-credit',
+			text: 'Created by Anthony Fitzpatrick at Wolf 359 Press AB',
+		});
+
+		const linksEl = footerEl.createDiv('metadata-labels-about-links');
+		const links: Array<{
+			icon?: string;
+			className?: string;
+			label: string;
+			url: string;
+		}> = [
+			{
+				icon: 'globe',
+				label: 'wolf359.app',
+				url: 'https://wolf359.app/metadata-labels/',
+			},
+			{
+				icon: 'book-open',
+				label: 'Wolf 359 Press',
+				url: 'https://wolf359.press',
+			},
+			{
+				className: 'metadata-labels-about-link-coffee',
+				label: 'Buy me a coffee',
+				url: 'https://buymeacoffee.com/wolf359pressab',
+			},
+			{
+				icon: 'bug',
+				label: 'Report a bug',
+				url: 'https://wolf359.app/metadata-labels/',
+			},
+			{
+				icon: 'lightbulb',
+				label: 'Feature request',
+				url: 'https://wolf359.app/metadata-labels/',
+			},
+		];
+
+		for (const link of links) {
+			const linkEl = linksEl.createEl('button', {
+				cls: 'metadata-labels-about-link',
+				type: 'button',
+			});
+			if (link.className) {
+				linkEl.addClass(link.className);
+			}
+			const iconEl = linkEl.createSpan({
+				cls: 'metadata-labels-about-link-icon',
+				attr: {
+					'aria-hidden': 'true',
+				},
+			});
+			if (link.icon) {
+				setIcon(iconEl, link.icon);
+			} else {
+				iconEl.addClass('metadata-labels-about-link-image-icon');
+			}
+			linkEl.createSpan({
+				cls: 'metadata-labels-about-link-text',
+				text: link.label,
+			});
+			linkEl.addEventListener('click', () => {
+				this.openExternalUrl(link.url);
+			});
+		}
+	}
+
+	/**
+	 * Opens a support/documentation URL outside Obsidian.
+	 *
+	 * Some Obsidian builds expose an external URL helper at runtime before the
+	 * TypeScript declarations include it. The narrow wrapper keeps that usage
+	 * typed and avoids importing Electron, which would make the plugin less
+	 * suitable for mobile and community-store installation.
+	 */
+	private openExternalUrl(url: string): void {
+		const appWithExternalOpen = this.app as App & {
+			openExternalUrl?: (externalUrl: string) => void;
+			openExternal?: (externalUrl: string) => void;
+		};
+
+		if (appWithExternalOpen.openExternalUrl) {
+			appWithExternalOpen.openExternalUrl(url);
+			return;
+		}
+
+		if (appWithExternalOpen.openExternal) {
+			appWithExternalOpen.openExternal(url);
+			return;
+		}
+
+		window.open(url, '_blank', 'noopener');
 	}
 
 	/**
