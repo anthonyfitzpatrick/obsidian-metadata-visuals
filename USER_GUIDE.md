@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.svg" alt="Metadata Visuals logo" width="96" height="96">
+</p>
+
 # Metadata Visuals User Guide
 
 This guide explains how to use Metadata Visuals in Obsidian after the plugin is installed and enabled.

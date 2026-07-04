@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.svg" alt="Metadata Visuals logo" width="96" height="96">
+</p>
+
 # Metadata Visuals
 
 Metadata Visuals is a metadata-driven visual engine for Obsidian.
@@ -28,6 +32,7 @@ Rules keep the metadata value clean. Icon shape, colour, filename colouring, fol
 
 Screenshots will be added before the first public release.
 
+- Official Metadata Visuals logo: `assets/icon.svg`
 - File Explorer labels
 - Rule settings table
 - Smart folder inheritance

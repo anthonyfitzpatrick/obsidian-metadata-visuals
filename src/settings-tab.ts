@@ -7,6 +7,7 @@ import {
 	Notice,
 	PluginSettingTab,
 	Setting,
+	normalizePath,
 	setIcon,
 	TextComponent,
 } from 'obsidian';
@@ -219,20 +220,38 @@ export class MetadataVisualsSettingsTab extends PluginSettingTab {
 	private renderAboutFooter(containerEl: HTMLElement): void {
 		const footerEl = containerEl.createDiv('metadata-visuals-about-footer');
 		const identityEl = footerEl.createDiv('metadata-visuals-about-identity');
+		const pluginDir = this.plugin.manifest.dir;
 
-		identityEl.createDiv({
+		if (pluginDir) {
+			identityEl.createEl('img', {
+				cls: 'metadata-visuals-about-logo',
+				attr: {
+					alt: 'Metadata Visuals logo',
+					decoding: 'async',
+					height: '48',
+					src: this.app.vault.adapter.getResourcePath(
+						normalizePath(`${pluginDir}/assets/icon.svg`),
+					),
+					width: '48',
+				},
+			});
+		}
+
+		const identityTextEl = identityEl.createDiv('metadata-visuals-about-identity-text');
+
+		identityTextEl.createDiv({
 			cls: 'metadata-visuals-about-title',
 			text: 'Metadata Visuals',
 		});
-		identityEl.createDiv({
+		identityTextEl.createDiv({
 			cls: 'metadata-visuals-about-version',
 			text: `Version ${this.plugin.manifest.version}`,
 		});
-		identityEl.createDiv({
+		identityTextEl.createDiv({
 			cls: 'metadata-visuals-about-credit',
 			text: 'Created by Anthony Fitzpatrick',
 		});
-		identityEl.createDiv({
+		identityTextEl.createDiv({
 			cls: 'metadata-visuals-about-credit',
 			text: 'Wolf 359 Press AB',
 		});
@@ -245,9 +264,19 @@ export class MetadataVisualsSettingsTab extends PluginSettingTab {
 			url: string;
 		}> = [
 			{
+				icon: 'bug',
+				label: 'Report a bug',
+				url: 'https://wolf359.app/metadata-visuals/report-bug/',
+			},
+			{
+				icon: 'lightbulb',
+				label: 'Feature request',
+				url: 'https://wolf359.app/metadata-visuals/request-feature/',
+			},
+			{
 				icon: 'globe',
 				label: 'wolf359.app',
-				url: 'https://wolf359.app/metadata-visuals/',
+				url: 'https://wolf359.app/',
 			},
 			{
 				icon: 'book-open',
@@ -258,16 +287,6 @@ export class MetadataVisualsSettingsTab extends PluginSettingTab {
 				className: 'metadata-visuals-about-link-coffee',
 				label: 'Buy me a coffee',
 				url: 'https://buymeacoffee.com/wolf359pressab',
-			},
-			{
-				icon: 'bug',
-				label: 'Report a bug',
-				url: 'https://wolf359.app/metadata-visuals/',
-			},
-			{
-				icon: 'lightbulb',
-				label: 'Feature request',
-				url: 'https://wolf359.app/metadata-visuals/',
 			},
 		];
 
