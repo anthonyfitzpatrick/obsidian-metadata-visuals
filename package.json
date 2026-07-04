@@ -1,15 +1,16 @@
 {
 	"name": "metadata-visuals",
 	"version": "0.1.1",
-	"description": "A metadata-driven visual engine for Obsidian.",
-	"homepage": "https://github.com/anthony/obsidian-metadata-visuals#readme",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/anthony/obsidian-metadata-visuals.git"
-	},
-	"bugs": {
-		"url": "https://github.com/anthony/obsidian-metadata-visuals/issues"
-	},
+"description": "Metadata-driven labels, colours, icons, smart folders, bulk updates and workflow visualisation for Obsidian.",
+"homepage": "https://github.com/anthonyfitzpatrick/obsidian-metadata-visuals#readme",
+"repository": {
+	"type": "git",
+	"url": "https://github.com/anthonyfitzpatrick/obsidian-metadata-visuals.git"
+},
+"bugs": {
+	"url": "https://github.com/anthonyfitzpatrick/obsidian-metadata-visuals/issues"
+},
+
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
