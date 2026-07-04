@@ -7,9 +7,9 @@ import type {
 	CachedMetadata,
 } from 'obsidian';
 
-import { MetadataLabelRule } from '../types';
+import { MetadataVisualRule } from '../types';
 
-const PROPERTY_COLOUR_CLASS = 'metadata-labels-property-coloured';
+const PROPERTY_COLOUR_CLASS = 'metadata-visuals-property-coloured';
 const REFRESH_DELAY_MS = 50;
 
 /**
@@ -27,7 +27,7 @@ export class MetadataPropertiesRenderer {
 
 	constructor(
 		private readonly app: App,
-		private readonly getRules: () => MetadataLabelRule[],
+		private readonly getRules: () => MetadataVisualRule[],
 		private readonly getColourMetadata: () => boolean,
 	) {}
 
@@ -130,7 +130,7 @@ export class MetadataPropertiesRenderer {
 	 * only empty placeholder rows because those cannot represent a meaningful
 	 * frontmatter value.
 	 */
-	private getMatchingRules(cache: CachedMetadata): MetadataLabelRule[] {
+	private getMatchingRules(cache: CachedMetadata): MetadataVisualRule[] {
 		return this.getRules().filter((rule) => {
 			const field = rule.field.trim();
 			const expectedValue = rule.value.trim();
@@ -150,7 +150,7 @@ export class MetadataPropertiesRenderer {
 	 * the rule value. That avoids colouring unrelated fields or unrelated values
 	 * in multi-value properties.
 	 */
-	private applyRuleToVisibleProperty(rule: MetadataLabelRule): void {
+	private applyRuleToVisibleProperty(rule: MetadataVisualRule): void {
 		for (const propertyEl of this.getPropertyElements(rule.field.trim())) {
 			const matchingValueEls = this.getMatchingPropertyValueElements(propertyEl, rule.value);
 

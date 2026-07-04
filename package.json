@@ -1,14 +1,14 @@
 {
-	"name": "metadata-labels",
+	"name": "metadata-visuals",
 	"version": "0.1.0",
-	"description": "Visual labels from frontmatter metadata for Obsidian notes, folders, and properties.",
-	"homepage": "https://github.com/anthony/obsidian-metadata-labels#readme",
+	"description": "A metadata-driven visual engine for Obsidian.",
+	"homepage": "https://github.com/anthony/obsidian-metadata-visuals#readme",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/anthony/obsidian-metadata-labels.git"
+		"url": "https://github.com/anthony/obsidian-metadata-visuals.git"
 	},
 	"bugs": {
-		"url": "https://github.com/anthony/obsidian-metadata-labels/issues"
+		"url": "https://github.com/anthony/obsidian-metadata-visuals/issues"
 	},
 	"main": "main.js",
 	"type": "module",
@@ -23,7 +23,7 @@
 		"obsidian-plugin",
 		"metadata",
 		"frontmatter",
-		"labels"
+		"visuals"
 	],
 	"author": "Anthony Fitzpatrick",
 	"license": "0BSD",

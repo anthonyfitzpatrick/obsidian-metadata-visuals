@@ -5,7 +5,7 @@
  * can be used by smart folder inheritance. Both allows the same configured
  * visual rule to be reused for notes and inherited folder status.
  */
-export type MetadataLabelRuleTarget = 'notes' | 'folders' | 'both';
+export type MetadataVisualRuleTarget = 'notes' | 'folders' | 'both';
 
 /**
  * One visual rule that maps a frontmatter field/value pair to File Explorer UI.
@@ -15,7 +15,7 @@ export type MetadataLabelRuleTarget = 'notes' | 'folders' | 'both';
  * showIcon controls whether the icon is rendered, and target limits whether
  * the rule applies to notes, folders, or both.
  */
-export interface MetadataLabelRule {
+export interface MetadataVisualRule {
 	id: string;
 	field: string;
 	value: string;
@@ -23,7 +23,7 @@ export interface MetadataLabelRule {
 	color: string;
 	colourFilename: boolean;
 	showIcon: boolean;
-	target: MetadataLabelRuleTarget;
+	target: MetadataVisualRuleTarget;
 }
 
 /**
@@ -34,15 +34,15 @@ export interface MetadataLabelRule {
  * enabled folders" turned on in settings. Both lists are needed: one answers
  * "which folders?" and the other answers "which metadata field should drive
  * inheritance for those folders?" allowedValues stores this plugin's own
- * per-field value vocabulary so Metadata Labels does not depend on Metadata
+ * per-field value vocabulary so Metadata Visuals does not depend on Metadata
  * Menu or on values already present in note frontmatter. fileExplorerField is
  * the one metadata field group allowed to control File Explorer icons/name
  * colour, while colourMetadata controls whether all matching rule groups colour
  * visible values in the note Properties panel. collapsedRuleGroups stores the
  * settings UI disclosure state by metadata field.
  */
-export interface MetadataLabelsSettings {
-	rules: MetadataLabelRule[];
+export interface MetadataVisualsSettings {
+	rules: MetadataVisualRule[];
 	smartFolders: string[];
 	smartFolderFields: string[];
 	allowedValues: Record<string, string[]>;
@@ -54,7 +54,7 @@ export interface MetadataLabelsSettings {
 /**
  * Empty settings used for first load and as a migration base.
  */
-export const DEFAULT_SETTINGS: MetadataLabelsSettings = {
+export const DEFAULT_SETTINGS: MetadataVisualsSettings = {
 	rules: [],
 	smartFolders: [],
 	smartFolderFields: [],
@@ -71,7 +71,7 @@ export const DEFAULT_SETTINGS: MetadataLabelsSettings = {
  * colour for seeded Editing Status rules. Defaults are intentionally visible so
  * a partially configured row still previews clearly in the settings table.
  */
-export const createDefaultRule = (): MetadataLabelRule => ({
+export const createDefaultRule = (): MetadataVisualRule => ({
 	id: crypto.randomUUID(),
 	field: '',
 	value: '',

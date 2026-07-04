@@ -11,11 +11,11 @@ import {
 	TextComponent,
 } from 'obsidian';
 
-import type MetadataLabelsPlugin from './main';
+import type MetadataVisualsPlugin from './main';
 import {
 	createDefaultRule,
-	MetadataLabelRule,
-	MetadataLabelRuleTarget,
+	MetadataVisualRule,
+	MetadataVisualRuleTarget,
 } from './types';
 
 const ICON_OPTIONS = [
@@ -36,7 +36,7 @@ const ICON_OPTIONS = [
 	'x',
 ];
 
-const TARGET_OPTIONS: Record<MetadataLabelRuleTarget, string> = {
+const TARGET_OPTIONS: Record<MetadataVisualRuleTarget, string> = {
 	notes: 'Notes',
 	folders: 'Folders',
 	both: 'Both',
@@ -60,19 +60,19 @@ interface FieldSelector {
 }
 
 /**
- * Classic Obsidian settings tab for Metadata Labels.
+ * Classic Obsidian settings tab for Metadata Visuals.
  *
  * The plugin intentionally uses PluginSettingTab.display() rather than
  * getSettingDefinitions() because it must support Obsidian 1.12.7. The UI is a
  * compact table grouped by metadata field so writers can manage many label
  * rules without large repeated cards.
  */
-export class MetadataLabelsSettingsTab extends PluginSettingTab {
+export class MetadataVisualsSettingsTab extends PluginSettingTab {
 	private hasAttemptedInitialFieldImport = false;
 
 	constructor(
 		app: App,
-		private readonly plugin: MetadataLabelsPlugin,
+		private readonly plugin: MetadataVisualsPlugin,
 	) {
 		super(app, plugin);
 	}
@@ -96,20 +96,20 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		const headerEl = containerEl.createDiv('metadata-labels-settings-header');
+		const headerEl = containerEl.createDiv('metadata-visuals-settings-header');
 
 		headerEl.createDiv({
-			cls: 'metadata-labels-settings-title',
-			text: 'Metadata Labels',
+			cls: 'metadata-visuals-settings-title',
+			text: 'Metadata Visuals',
 		});
 		headerEl.createDiv({
-			cls: 'metadata-labels-settings-description',
+			cls: 'metadata-visuals-settings-description',
 			text: 'Create visual labels from frontmatter metadata.',
 		});
 
-		const actionsEl = containerEl.createDiv('metadata-labels-actions');
-		const actionsTextEl = actionsEl.createDiv('metadata-labels-actions-text');
-		const actionsControlsEl = actionsEl.createDiv('metadata-labels-actions-controls');
+		const actionsEl = containerEl.createDiv('metadata-visuals-actions');
+		const actionsTextEl = actionsEl.createDiv('metadata-visuals-actions-text');
+		const actionsControlsEl = actionsEl.createDiv('metadata-visuals-actions-controls');
 		const existingGroupFields = new Set(
 			Array.from(this.groupRulesByField().keys()),
 		);
@@ -118,16 +118,16 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		let addRuleButtonEl: HTMLButtonElement | null = null;
 
 		actionsTextEl.createDiv({
-			cls: 'metadata-labels-actions-title',
+			cls: 'metadata-visuals-actions-title',
 			text: 'Rules',
 		});
 		actionsTextEl.createDiv({
-			cls: 'metadata-labels-actions-description',
+			cls: 'metadata-visuals-actions-description',
 			text: 'Create a label group from a known metadata field.',
 		});
 
 		const metadataToggleEl = actionsControlsEl.createEl('label', {
-			cls: 'metadata-labels-action-toggle',
+			cls: 'metadata-visuals-action-toggle',
 		});
 		const metadataToggle = new Setting(metadataToggleEl)
 			.addToggle((toggle) => {
@@ -139,15 +139,15 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 					});
 				toggle.toggleEl.setAttribute('aria-label', 'Colour note metadata');
 			});
-		metadataToggle.settingEl.addClass('metadata-labels-control-setting');
+		metadataToggle.settingEl.addClass('metadata-visuals-control-setting');
 		metadataToggleEl.createSpan({
-			cls: 'metadata-labels-inline-toggle-label',
+			cls: 'metadata-visuals-inline-toggle-label',
 			text: 'Colour note metadata',
 		});
 
-		const fieldSelectorEl = actionsControlsEl.createDiv('metadata-labels-action-field');
+		const fieldSelectorEl = actionsControlsEl.createDiv('metadata-visuals-action-field');
 		fieldSelectorEl.createSpan({
-			cls: 'metadata-labels-action-field-label',
+			cls: 'metadata-visuals-action-field-label',
 			text: 'Field',
 		});
 		const fieldSelector = new TextComponent(fieldSelectorEl);
@@ -199,7 +199,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 
 		addRuleButtonEl = addRuleButton.buttonEl;
 		addRuleButtonEl.disabled = selectedNewField === '';
-		addRuleButtonEl.addClass('metadata-labels-action-button');
+		addRuleButtonEl.addClass('metadata-visuals-action-button');
 
 		for (const [field, rules] of this.groupRulesByField()) {
 			this.renderRuleGroup(containerEl, field, rules);
@@ -217,23 +217,27 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	 * is available, with a browser window fallback for older typings/runtimes.
 	 */
 	private renderAboutFooter(containerEl: HTMLElement): void {
-		const footerEl = containerEl.createDiv('metadata-labels-about-footer');
-		const identityEl = footerEl.createDiv('metadata-labels-about-identity');
+		const footerEl = containerEl.createDiv('metadata-visuals-about-footer');
+		const identityEl = footerEl.createDiv('metadata-visuals-about-identity');
 
 		identityEl.createDiv({
-			cls: 'metadata-labels-about-title',
-			text: 'Metadata Labels',
+			cls: 'metadata-visuals-about-title',
+			text: 'Metadata Visuals',
 		});
 		identityEl.createDiv({
-			cls: 'metadata-labels-about-version',
+			cls: 'metadata-visuals-about-version',
 			text: `Version ${this.plugin.manifest.version}`,
 		});
 		identityEl.createDiv({
-			cls: 'metadata-labels-about-credit',
-			text: 'Created by Anthony Fitzpatrick at Wolf 359 Press AB',
+			cls: 'metadata-visuals-about-credit',
+			text: 'Created by Anthony Fitzpatrick',
+		});
+		identityEl.createDiv({
+			cls: 'metadata-visuals-about-credit',
+			text: 'Wolf 359 Press AB',
 		});
 
-		const linksEl = footerEl.createDiv('metadata-labels-about-links');
+		const linksEl = footerEl.createDiv('metadata-visuals-about-links');
 		const links: Array<{
 			icon?: string;
 			className?: string;
@@ -243,7 +247,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			{
 				icon: 'globe',
 				label: 'wolf359.app',
-				url: 'https://wolf359.app/metadata-labels/',
+				url: 'https://wolf359.app/metadata-visuals/',
 			},
 			{
 				icon: 'book-open',
@@ -251,32 +255,32 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 				url: 'https://wolf359.press',
 			},
 			{
-				className: 'metadata-labels-about-link-coffee',
+				className: 'metadata-visuals-about-link-coffee',
 				label: 'Buy me a coffee',
 				url: 'https://buymeacoffee.com/wolf359pressab',
 			},
 			{
 				icon: 'bug',
 				label: 'Report a bug',
-				url: 'https://wolf359.app/metadata-labels/',
+				url: 'https://wolf359.app/metadata-visuals/',
 			},
 			{
 				icon: 'lightbulb',
 				label: 'Feature request',
-				url: 'https://wolf359.app/metadata-labels/',
+				url: 'https://wolf359.app/metadata-visuals/',
 			},
 		];
 
 		for (const link of links) {
 			const linkEl = linksEl.createEl('button', {
-				cls: 'metadata-labels-about-link',
+				cls: 'metadata-visuals-about-link',
 				type: 'button',
 			});
 			if (link.className) {
 				linkEl.addClass(link.className);
 			}
 			const iconEl = linkEl.createSpan({
-				cls: 'metadata-labels-about-link-icon',
+				cls: 'metadata-visuals-about-link-icon',
 				attr: {
 					'aria-hidden': 'true',
 				},
@@ -284,10 +288,10 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			if (link.icon) {
 				setIcon(iconEl, link.icon);
 			} else {
-				iconEl.addClass('metadata-labels-about-link-image-icon');
+				iconEl.addClass('metadata-visuals-about-link-image-icon');
 			}
 			linkEl.createSpan({
-				cls: 'metadata-labels-about-link-text',
+				cls: 'metadata-visuals-about-link-text',
 				text: link.label,
 			});
 			linkEl.addEventListener('click', () => {
@@ -331,7 +335,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	 * field, but it still needs to know about fields whose possible values live
 	 * in an external definition file and have not appeared in frontmatter yet.
 	 * This one-time import keeps the UI standalone after the definitions are
-	 * copied into Metadata Labels data, and it avoids showing a notice just for
+	 * copied into Metadata Visuals data, and it avoids showing a notice just for
 	 * opening settings.
 	 */
 	private importFieldDefinitionsOnFirstDisplay(): void {
@@ -358,13 +362,13 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	private renderRuleGroup(
 		containerEl: HTMLElement,
 		field: string,
-		rules: MetadataLabelRule[],
+		rules: MetadataVisualRule[],
 	): void {
-		const groupEl = containerEl.createDiv('metadata-labels-rule-group');
-		const headerEl = groupEl.createDiv('metadata-labels-rule-group-header');
-		const titleEl = headerEl.createDiv('metadata-labels-rule-group-title');
-		const controlsEl = headerEl.createDiv('metadata-labels-rule-group-controls');
-		const actionsEl = headerEl.createDiv('metadata-labels-rule-group-actions');
+		const groupEl = containerEl.createDiv('metadata-visuals-rule-group');
+		const headerEl = groupEl.createDiv('metadata-visuals-rule-group-header');
+		const titleEl = headerEl.createDiv('metadata-visuals-rule-group-title');
+		const controlsEl = headerEl.createDiv('metadata-visuals-rule-group-controls');
+		const actionsEl = headerEl.createDiv('metadata-visuals-rule-group-actions');
 		const isCollapsed = this.isRuleGroupCollapsed(field);
 
 		groupEl.toggleClass('is-collapsed', isCollapsed);
@@ -376,19 +380,19 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			void this.setRuleGroupCollapsed(field, !this.isRuleGroupCollapsed(field));
 		});
 
-		const fieldTitleEl = titleEl.createDiv('metadata-labels-field-title-row');
+		const fieldTitleEl = titleEl.createDiv('metadata-visuals-field-title-row');
 		const disclosureEl = fieldTitleEl.createSpan({
-			cls: 'metadata-labels-rule-group-disclosure',
+			cls: 'metadata-visuals-rule-group-disclosure',
 			text: isCollapsed ? '▸' : '▾',
 		});
 		fieldTitleEl.createSpan({
-			cls: 'metadata-labels-field-name',
+			cls: 'metadata-visuals-field-name',
 			text: field,
 		});
 
 		disclosureEl.setAttribute('aria-hidden', 'true');
 		titleEl.createDiv({
-			cls: 'metadata-labels-field-count',
+			cls: 'metadata-visuals-field-count',
 			text: `${rules.length} ${rules.length === 1 ? 'label' : 'labels'}`,
 		});
 
@@ -410,7 +414,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 				toggle.toggleEl.insertAdjacentElement(
 					'afterend',
 					createSpan({
-						cls: 'metadata-labels-inline-toggle-label',
+						cls: 'metadata-visuals-inline-toggle-label',
 						text: 'Use for File Explorer',
 					}),
 				);
@@ -426,7 +430,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 				toggle.toggleEl.insertAdjacentElement(
 					'afterend',
 					createSpan({
-						cls: 'metadata-labels-inline-toggle-label',
+						cls: 'metadata-visuals-inline-toggle-label',
 						text: 'Apply to enabled folders',
 					}),
 				);
@@ -455,12 +459,12 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 			return;
 		}
 
-		const tableEl = groupEl.createDiv('metadata-labels-rule-table');
-		const tableHeaderEl = tableEl.createDiv('metadata-labels-rule-table-header');
+		const tableEl = groupEl.createDiv('metadata-visuals-rule-table');
+		const tableHeaderEl = tableEl.createDiv('metadata-visuals-rule-table-header');
 
 		for (const label of ['Drag', 'Value', 'Shape', 'Colour', 'Icon', 'Name', 'Target', 'Preview', 'Del']) {
 			tableHeaderEl.createDiv({
-				cls: 'metadata-labels-rule-table-heading',
+				cls: 'metadata-visuals-rule-table-heading',
 				text: label,
 			});
 		}
@@ -519,8 +523,8 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 				'textarea',
 				'a',
 				'.clickable-icon',
-				'.metadata-labels-rule-group-controls',
-				'.metadata-labels-rule-group-actions',
+				'.metadata-visuals-rule-group-controls',
+				'.metadata-visuals-rule-group-actions',
 			].join(', ')) !== null;
 	}
 
@@ -534,23 +538,23 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	 */
 	private renderRule(
 		tableEl: HTMLElement,
-		rule: MetadataLabelRule,
-		rules: MetadataLabelRule[],
+		rule: MetadataVisualRule,
+		rules: MetadataVisualRule[],
 		index: number,
 	): void {
-		const rowEl = tableEl.createDiv('metadata-labels-rule-table-row');
-		const dragEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-drag-cell');
-		const valueEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-value-cell');
-		const iconEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-icon-cell');
-		const colorEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-colour-cell');
-		const showIconEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-show-icon-cell');
-		const colourNameEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-colour-name-cell');
-		const targetEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-target-cell');
-		const previewEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-preview-cell');
-		const deleteEl = rowEl.createDiv('metadata-labels-rule-table-cell metadata-labels-delete-cell');
-		const previewIconEl = previewEl.createSpan('metadata-labels-rule-preview-icon');
+		const rowEl = tableEl.createDiv('metadata-visuals-rule-table-row');
+		const dragEl = rowEl.createDiv('metadata-visuals-rule-table-cell metadata-visuals-drag-cell');
+		const valueEl = rowEl.createDiv('metadata-visuals-rule-table-cell metadata-visuals-value-cell');
+		const iconEl = rowEl.createDiv('metadata-visuals-rule-table-cell metadata-visuals-icon-cell');
+		const colorEl = rowEl.createDiv('metadata-visuals-rule-table-cell metadata-visuals-colour-cell');
+		const showIconEl = rowEl.createDiv('metadata-visuals-rule-table-cell metadata-visuals-show-icon-cell');
+		const colourNameEl = rowEl.createDiv('metadata-visuals-rule-table-cell metadata-visuals-colour-name-cell');
+		const targetEl = rowEl.createDiv('metadata-visuals-rule-table-cell metadata-visuals-target-cell');
+		const previewEl = rowEl.createDiv('metadata-visuals-rule-table-cell metadata-visuals-preview-cell');
+		const deleteEl = rowEl.createDiv('metadata-visuals-rule-table-cell metadata-visuals-delete-cell');
+		const previewIconEl = previewEl.createSpan('metadata-visuals-rule-preview-icon');
 		const previewTextEl = previewEl.createSpan({
-			cls: 'metadata-labels-rule-preview-text',
+			cls: 'metadata-visuals-rule-preview-text',
 			text: rule.value || 'New label',
 		});
 
@@ -568,7 +572,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		this.updatePreview(previewIconEl, previewTextEl, rule);
 
 		valueEl.createSpan({
-			cls: 'metadata-labels-value-text',
+			cls: 'metadata-visuals-value-text',
 			text: rule.value || 'New label',
 		});
 		this.updatePreview(previewIconEl, previewTextEl, rule);
@@ -615,7 +619,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		});
 
 		showIconEl.createSpan({
-			cls: 'metadata-labels-toggle-label',
+			cls: 'metadata-visuals-toggle-label',
 			text: 'Icon',
 		});
 
@@ -634,7 +638,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		});
 
 		colourNameEl.createSpan({
-			cls: 'metadata-labels-toggle-label',
+			cls: 'metadata-visuals-toggle-label',
 			text: 'Name',
 		});
 
@@ -679,11 +683,11 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	private configureDragHandle(
 		rowEl: HTMLElement,
 		dragEl: HTMLElement,
-		rules: MetadataLabelRule[],
+		rules: MetadataVisualRule[],
 		index: number,
 	): void {
 		const handleEl = dragEl.createSpan({
-			cls: 'metadata-labels-drag-handle',
+			cls: 'metadata-visuals-drag-handle',
 			text: '☰',
 		});
 
@@ -692,7 +696,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		rowEl.draggable = true;
 
 		rowEl.addEventListener('dragstart', (event) => {
-			rowEl.addClass('metadata-labels-rule-row-dragging');
+			rowEl.addClass('metadata-visuals-rule-row-dragging');
 			event.dataTransfer?.setData('text/plain', String(index));
 			event.dataTransfer?.setDragImage(rowEl, 12, 12);
 			if (event.dataTransfer) {
@@ -701,24 +705,24 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		});
 
 		rowEl.addEventListener('dragend', () => {
-			rowEl.removeClass('metadata-labels-rule-row-dragging');
+			rowEl.removeClass('metadata-visuals-rule-row-dragging');
 		});
 
 		rowEl.addEventListener('dragover', (event) => {
 			event.preventDefault();
-			rowEl.addClass('metadata-labels-rule-row-drop-target');
+			rowEl.addClass('metadata-visuals-rule-row-drop-target');
 			if (event.dataTransfer) {
 				event.dataTransfer.dropEffect = 'move';
 			}
 		});
 
 		rowEl.addEventListener('dragleave', () => {
-			rowEl.removeClass('metadata-labels-rule-row-drop-target');
+			rowEl.removeClass('metadata-visuals-rule-row-drop-target');
 		});
 
 		rowEl.addEventListener('drop', (event) => {
 			event.preventDefault();
-			rowEl.removeClass('metadata-labels-rule-row-drop-target');
+			rowEl.removeClass('metadata-visuals-rule-row-drop-target');
 
 			const fromIndex = Number(event.dataTransfer?.getData('text/plain'));
 
@@ -739,7 +743,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	 * array is enough for both immediate preview redraws and restart persistence.
 	 */
 	private moveRuleWithinGroup(
-		rules: MetadataLabelRule[],
+		rules: MetadataVisualRule[],
 		fromIndex: number,
 		toIndex: number,
 	): void {
@@ -788,7 +792,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		onSelect: (value: string) => void | Promise<void>,
 	): FieldSelector {
 		const inputEl = text.inputEl;
-		const listId = `metadata-labels-fields-${crypto.randomUUID()}`;
+		const listId = `metadata-visuals-fields-${crypto.randomUUID()}`;
 		const dataListEl = inputEl.parentElement?.createEl('datalist');
 
 		if (!dataListEl) {
@@ -865,7 +869,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	/**
 	 * Returns whether a rule has enough data to match a note or folder status.
 	 */
-	private isUsefulRule(rule: MetadataLabelRule): boolean {
+	private isUsefulRule(rule: MetadataVisualRule): boolean {
 		return rule.field.trim() !== ''
 			&& rule.value.trim() !== ''
 			&& rule.icon.trim() !== '';
@@ -880,7 +884,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	private createEditingStatusRule(
 		value: string,
 		color: string,
-	): MetadataLabelRule {
+	): MetadataVisualRule {
 		return {
 			...createDefaultRule(),
 			field: 'Editing Status',
@@ -896,7 +900,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	/**
 	 * Creates a blank new row under an existing metadata field group.
 	 */
-	private createRuleForField(field: string, value = ''): MetadataLabelRule {
+	private createRuleForField(field: string, value = ''): MetadataVisualRule {
 		return {
 			...createDefaultRule(),
 			field,
@@ -920,8 +924,8 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	 */
 	private createRulesForFieldValues(
 		field: string,
-		existingRules: MetadataLabelRule[] = [],
-	): MetadataLabelRule[] {
+		existingRules: MetadataVisualRule[] = [],
+	): MetadataVisualRule[] {
 		const values = this.getRuleValuesForField(field);
 		const existingRulesByValue = new Map(
 			existingRules.map((rule) => [this.normalizeStatusValue(rule.value), rule]),
@@ -953,10 +957,10 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	 * target, and filename colouring from a previous row.
 	 */
 	private copyRuleForField(
-		rule: MetadataLabelRule,
+		rule: MetadataVisualRule,
 		field: string,
 		value: string,
-	): MetadataLabelRule {
+	): MetadataVisualRule {
 		return {
 			...rule,
 			id: crypto.randomUUID(),
@@ -1021,7 +1025,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	/**
 	 * Safely parses a rule target selected in the row dropdown.
 	 */
-	private parseRuleTarget(value: string): MetadataLabelRuleTarget {
+	private parseRuleTarget(value: string): MetadataVisualRuleTarget {
 		if (value === 'notes' || value === 'folders' || value === 'both') {
 			return value;
 		}
@@ -1054,7 +1058,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	/**
 	 * Imports external field definitions into this plugin's own value registry.
 	 *
-	 * The import is deliberately one-time and optional. Metadata Labels reads
+	 * The import is deliberately one-time and optional. Metadata Visuals reads
 	 * known local definition files when they are available, copies field names
 	 * and configured values into its own data.json, and then operates
 	 * independently from that point onward.
@@ -1178,7 +1182,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	 * }
 	 *
 	 * Sorting by numeric keys keeps values such as Editing Stage in the order
-	 * configured by the source before they are copied into Metadata Labels.
+	 * configured by the source before they are copied into Metadata Visuals.
 	 */
 	private getMetadataMenuValues(presetField: Record<string, unknown>): string[] {
 		const options = presetField.options;
@@ -1319,8 +1323,8 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	 * Legacy or partially migrated rules without a field are displayed under
 	 * Editing Status so they remain visible and editable instead of disappearing.
 	 */
-	private groupRulesByField(): Map<string, MetadataLabelRule[]> {
-		const groups = new Map<string, MetadataLabelRule[]>();
+	private groupRulesByField(): Map<string, MetadataVisualRule[]> {
+		const groups = new Map<string, MetadataVisualRule[]>();
 
 		for (const rule of this.plugin.settings.rules) {
 			const field = rule.field || 'Editing Status';
@@ -1440,7 +1444,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	private updatePreview(
 		iconEl: HTMLElement,
 		textEl: HTMLElement,
-		rule: MetadataLabelRule,
+		rule: MetadataVisualRule,
 	): void {
 		iconEl.empty();
 		iconEl.style.color = rule.color;

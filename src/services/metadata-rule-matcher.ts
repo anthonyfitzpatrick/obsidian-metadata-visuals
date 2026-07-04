@@ -1,9 +1,9 @@
 import type { App, CachedMetadata, TFile } from 'obsidian';
 
-import { MetadataLabelRule } from '../types';
+import { MetadataVisualRule } from '../types';
 
 /**
- * Matches markdown notes against the configured metadata label rules.
+ * Matches markdown notes against the configured metadata visual rules.
  *
  * This service deliberately does not know anything about File Explorer DOM
  * rendering. It answers one question only: given a note, which rule should be
@@ -14,7 +14,7 @@ import { MetadataLabelRule } from '../types';
 export class MetadataRuleMatcher {
 	constructor(
 		private readonly app: App,
-		private readonly getRules: () => MetadataLabelRule[],
+		private readonly getRules: () => MetadataVisualRule[],
 	) {}
 
 	/**
@@ -24,7 +24,7 @@ export class MetadataRuleMatcher {
 	 * keeps matching fast during File Explorer refreshes and uses the same parsed
 	 * frontmatter representation Obsidian exposes to other plugins.
 	 */
-	matchFile(file: TFile): MetadataLabelRule | null {
+	matchFile(file: TFile): MetadataVisualRule | null {
 		const cache = this.app.metadataCache.getFileCache(file);
 		if (!cache?.frontmatter) {
 			return null;
@@ -43,8 +43,8 @@ export class MetadataRuleMatcher {
 	 */
 	private matchFrontmatter(
 		cache: CachedMetadata,
-		rules: MetadataLabelRule[],
-	): MetadataLabelRule | null {
+		rules: MetadataVisualRule[],
+	): MetadataVisualRule | null {
 		for (const rule of rules) {
 			if (rule.target === 'folders') {
 				continue;
@@ -97,7 +97,7 @@ export class MetadataRuleMatcher {
 	/**
 	 * Normalises the values used for matching.
 	 *
-	 * Metadata Labels originally allowed status emoji to live inside the raw
+	 * Metadata Visuals originally allowed status emoji to live inside the raw
 	 * value, for example "🟢 Done". Current rules store raw values such as
 	 * "Done" and keep icon/colour choices in separate fields. Stripping only
 	 * leading status-colour emoji preserves compatibility with older notes while

@@ -1,8 +1,8 @@
-# Metadata Labels User Guide
+# Metadata Visuals User Guide
 
-This guide explains how to use Metadata Labels in Obsidian after the plugin is installed and enabled.
+This guide explains how to use Metadata Visuals in Obsidian after the plugin is installed and enabled.
 
-Metadata Labels turns frontmatter metadata into visual cues. A note can keep clean metadata such as:
+Metadata Visuals turns frontmatter metadata into visual cues. A note can keep clean metadata such as:
 
 ```yaml
 ---
@@ -15,7 +15,7 @@ Importance: Critical
 The plugin then displays configured colours and icons in the File Explorer, in folder rows, and in the visible note Properties panel.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 01 placeholder:</strong> Upload a high-level screenshot named <code>screenshots/metadata-labels-overview.png</code>. It should show Obsidian with the File Explorer visible on the left, several notes using Metadata Labels icons/coloured names, and an open note showing coloured Properties values at the top. Use a small sample vault with non-private note names so the screenshot is safe for public documentation.
+<strong>Screenshot 01 placeholder:</strong> Upload a high-level screenshot named <code>screenshots/metadata-visuals-overview.png</code>. It should show Obsidian with the File Explorer visible on the left, several notes using Metadata Visuals icons/coloured names, and an open note showing coloured Properties values at the top. Use a small sample vault with non-private note names so the screenshot is safe for public documentation.
 </div>
 
 ## Core Concepts
@@ -62,21 +62,21 @@ Metadata/property colouring is different: it can use all matching rule groups.
 ## First Setup
 
 1. Open Obsidian Settings.
-2. Open Metadata Labels.
+2. Open Metadata Visuals.
 3. In the Rules header, choose a metadata field from the `Select` field.
 4. Click `Add rule`.
 5. Review the generated rows.
 6. Choose the shape, colour, icon/name toggles, and target for each value.
 
-Metadata Labels creates rows from available values for the selected field. It can use values already found in your notes and values imported from known field-definition sources.
+Metadata Visuals creates rows from available values for the selected field. It can use values already found in your notes and values imported from known field-definition sources.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 02 placeholder:</strong> Upload a setup screenshot named <code>screenshots/settings-add-rule.png</code>. It should show Settings -&gt; Metadata Labels with the Rules header visible, the <code>Colour note metadata</code> toggle, the <code>Select</code> field open or ready to select a metadata field, and the <code>Add rule</code> button. Capture the clean compact Add Rule area without private vault content.
+<strong>Screenshot 02 placeholder:</strong> Upload a setup screenshot named <code>screenshots/settings-add-rule.png</code>. It should show Settings -&gt; Metadata Visuals with the Rules header visible, the <code>Colour note metadata</code> toggle, the <code>Select</code> field open or ready to select a metadata field, and the <code>Add rule</code> button. Capture the clean compact Add Rule area without private vault content.
 </div>
 
 ## Default Editing Status Rules
 
-If no useful rules exist, Metadata Labels creates three default rules:
+If no useful rules exist, Metadata Visuals creates three default rules:
 
 | Field | Value | Shape | Colour |
 | --- | --- | --- | --- |
@@ -86,7 +86,7 @@ If no useful rules exist, Metadata Labels creates three default rules:
 
 These defaults store clean metadata values. Emoji are not stored in the rule value.
 
-Older notes that contain values such as `🔴 To Do`, `🟠 In Progress`, or `🟢 Done` still match because Metadata Labels normalises leading status emoji before comparing values.
+Older notes that contain values such as `🔴 To Do`, `🟠 In Progress`, or `🟢 Done` still match because Metadata Visuals normalises leading status emoji before comparing values.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
 <strong>Screenshot 03 placeholder:</strong> Upload a defaults screenshot named <code>screenshots/default-editing-status-rules.png</code>. It should show the expanded <code>Editing Status</code> rule group with the three default rows: <code>To Do</code>, <code>In Progress</code>, and <code>Done</code>. Make sure the Shape, Colour, Icon, Name, Target, Preview, and Delete columns are visible.
@@ -102,7 +102,7 @@ The top Rules area contains:
 
 The field selector starts blank. `Add rule` remains disabled until a real field is selected.
 
-When you click `Add rule`, Metadata Labels first tries to import known field definitions in the background. If no definitions are found, it uses values already found in note frontmatter.
+When you click `Add rule`, Metadata Visuals first tries to import known field definitions in the background. If no definitions are found, it uses values already found in note frontmatter.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
 <strong>Screenshot 04 placeholder:</strong> Upload a field selector screenshot named <code>screenshots/add-rule-field-selector.png</code>. It should show the Add Rule <code>Select</code> input with the dropdown/list of available metadata fields visible. Include examples such as <code>Editing Status</code>, <code>Editing Stage</code>, and <code>Importance</code> if they are available in the sample vault.
@@ -166,7 +166,7 @@ For each matching note:
 Rule order matters within the selected group. The first matching rule wins.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 07 placeholder:</strong> Upload a File Explorer screenshot named <code>screenshots/file-explorer-labels.png</code>. It should show note rows with Metadata Labels icons and/or coloured note names. Include at least three notes representing different values, such as <code>To Do</code>, <code>In Progress</code>, and <code>Done</code>, so the colour differences are clear.
+<strong>Screenshot 07 placeholder:</strong> Upload a File Explorer screenshot named <code>screenshots/file-explorer-labels.png</code>. It should show note rows with Metadata Visuals icons and/or coloured note names. Include at least three notes representing different values, such as <code>To Do</code>, <code>In Progress</code>, and <code>Done</code>, so the colour differences are clear.
 </div>
 
 ## Note Properties Colouring
@@ -185,7 +185,7 @@ Example:
 
 This feature does not depend on `Use for File Explorer`. A group can colour Properties values even if another group controls the File Explorer.
 
-If you turn `Colour note metadata` off, Metadata Labels removes its injected property colours.
+If you turn `Colour note metadata` off, Metadata Visuals removes its injected property colours.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
 <strong>Screenshot 08 placeholder:</strong> Upload a Properties screenshot named <code>screenshots/coloured-note-properties.png</code>. It should show an open note with the Properties panel visible and multiple coloured values, for example <code>Editing Status: To Do</code>, <code>Editing Stage: Published</code>, and <code>Importance: Critical</code>. The File Explorer can be visible too, but the coloured Properties values should be the focus.
@@ -197,14 +197,14 @@ Smart folders allow folders to inherit a visual rule from descendant notes.
 
 There are two steps:
 
-1. Right-click a folder in the File Explorer and choose `Metadata Labels > Enable smart folder rule`.
+1. Right-click a folder in the File Explorer and choose `Metadata Visuals > Enable smart folder rule`.
 2. In settings, enable `Apply to enabled folders` for the rule group that should drive folder inheritance.
 
 Smart folder inheritance uses the active File Explorer rule group. This keeps folder visuals aligned with the same metadata workflow used for note rows.
 
 ### Editing Status Aggregation
 
-For an Editing Status workflow, Metadata Labels checks descendant markdown notes that have the relevant metadata field.
+For an Editing Status workflow, Metadata Visuals checks descendant markdown notes that have the relevant metadata field.
 
 Folder-note/dashboard files that represent the folder itself are ignored.
 
@@ -229,31 +229,31 @@ Right-click a folder in the File Explorer.
 You will see:
 
 ```text
-Metadata Labels >
+Metadata Visuals >
   Enable smart folder rule
 ```
 
 If the folder is already enabled:
 
 ```text
-Metadata Labels >
+Metadata Visuals >
   Disable smart folder rule
 ```
 
 Disabling a smart folder immediately removes its injected styling.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 10 placeholder:</strong> Upload a folder context-menu screenshot named <code>screenshots/folder-context-menu.png</code>. It should show a File Explorer folder right-click menu with the <code>Metadata Labels</code> submenu open and either <code>Enable smart folder rule</code> or <code>Disable smart folder rule</code> visible.
+<strong>Screenshot 10 placeholder:</strong> Upload a folder context-menu screenshot named <code>screenshots/folder-context-menu.png</code>. It should show a File Explorer folder right-click menu with the <code>Metadata Visuals</code> submenu open and either <code>Enable smart folder rule</code> or <code>Disable smart folder rule</code> visible.
 </div>
 
 ## Bulk Metadata Updates
 
-Metadata Labels adds bulk update actions to File Explorer context menus.
+Metadata Visuals adds bulk update actions to File Explorer context menus.
 
 Example:
 
 ```text
-Metadata Labels >
+Metadata Visuals >
   Apply Editing Status >
     To Do
     In Progress
@@ -269,23 +269,23 @@ Bulk updates support:
 - selected folders;
 - mixed note and folder selections.
 
-When a folder is selected, Metadata Labels updates all descendant markdown notes. If selected folders overlap, each note is updated only once.
+When a folder is selected, Metadata Visuals updates all descendant markdown notes. If selected folders overlap, each note is updated only once.
 
 Existing frontmatter is preserved. Notes without frontmatter receive a new frontmatter block.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 11 placeholder:</strong> Upload a bulk update screenshot named <code>screenshots/bulk-metadata-update-menu.png</code>. It should show a File Explorer context menu for selected notes and/or folders with <code>Metadata Labels &gt; Apply Editing Status &gt; To Do / In Progress / Done</code> visible. Use sample notes/folders with non-private names.
+<strong>Screenshot 11 placeholder:</strong> Upload a bulk update screenshot named <code>screenshots/bulk-metadata-update-menu.png</code>. It should show a File Explorer context menu for selected notes and/or folders with <code>Metadata Visuals &gt; Apply Editing Status &gt; To Do / In Progress / Done</code> visible. Use sample notes/folders with non-private names.
 </div>
 
 ## Field Definition Import
 
-Metadata Labels can import configured possible values from known local sources. Currently, it can read Metadata Menu's local `data.json` if it exists.
+Metadata Visuals can import configured possible values from known local sources. Currently, it can read Metadata Menu's local `data.json` if it exists.
 
 This is a one-time copy:
 
-- Metadata Labels imports field names and possible values.
-- Imported values are saved into Metadata Labels' own settings.
-- Metadata Labels does not require Metadata Menu at runtime.
+- Metadata Visuals imports field names and possible values.
+- Imported values are saved into Metadata Visuals' own settings.
+- Metadata Visuals does not require Metadata Menu at runtime.
 - If Metadata Menu is removed later, imported values remain available.
 
 This is useful when a field has possible values that have not been used in any note yet.
@@ -296,7 +296,7 @@ This is useful when a field has possible values that have not been used in any n
 
 ## Value Normalisation
 
-Metadata Labels compares values after normalising leading status emoji.
+Metadata Visuals compares values after normalising leading status emoji.
 
 These values are treated as equivalent:
 
@@ -345,7 +345,7 @@ This works well for Properties colouring, and can also control File Explorer vis
 
 ### I do not see a field in the Add Rule selector
 
-The field must be known to Metadata Labels. It becomes known when:
+The field must be known to Metadata Visuals. It becomes known when:
 
 - the field exists in frontmatter in at least one note; or
 - the field was imported from a supported field-definition source.
@@ -359,7 +359,7 @@ Rows are created from:
 - imported possible values;
 - values already found in frontmatter.
 
-If a possible value has never been imported and is not used in any note, Metadata Labels cannot discover it from Obsidian core alone.
+If a possible value has never been imported and is not used in any note, Metadata Visuals cannot discover it from Obsidian core alone.
 
 ### File Explorer colours do not match the Properties colours
 
@@ -387,17 +387,17 @@ Check that:
 
 ### I disabled a rule but stale colours remain
 
-Metadata Labels clears old injected styles before reapplying. If Obsidian has not rerendered the current pane yet, switch notes or trigger a layout refresh.
+Metadata Visuals clears old injected styles before reapplying. If Obsidian has not rerendered the current pane yet, switch notes or trigger a layout refresh.
 
 ## Compatibility
 
-Metadata Labels is designed to support Obsidian 1.12.7.
+Metadata Visuals is designed to support Obsidian 1.12.7.
 
 The settings UI uses classic `PluginSettingTab.display()` intentionally. It does not use the newer declarative settings API.
 
 ## Data Stored By The Plugin
 
-Metadata Labels stores:
+Metadata Visuals stores:
 
 - visual rules;
 - enabled smart folder paths;
@@ -411,7 +411,7 @@ It does not alter your notes except when you explicitly use bulk metadata update
 
 ## Uninstalling
 
-1. Disable Metadata Labels in Obsidian.
+1. Disable Metadata Visuals in Obsidian.
 2. Remove the plugin folder if desired.
 
 The plugin removes its injected File Explorer and Properties styles when unloaded. Your frontmatter values remain unchanged, except for metadata you intentionally changed through bulk update actions.

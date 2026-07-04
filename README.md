@@ -1,6 +1,16 @@
-# Metadata Labels
+# Metadata Visuals
 
-Metadata Labels is an Obsidian plugin that turns frontmatter metadata into visual labels for notes, folders, and visible note properties.
+Metadata Visuals is a metadata-driven visual engine for Obsidian.
+
+Use metadata to control:
+
+- File Explorer colours
+- File Explorer icons
+- smart folders
+- metadata colouring
+- workflow visualisation
+- bulk updates
+- folder inheritance
 
 It is built for writing, research, and project vaults where metadata such as `Editing Status`, `Editing Stage`, or `Importance` should be visible at a glance without putting emoji or formatting directly into the stored metadata value.
 
@@ -34,7 +44,7 @@ Screenshots will be added before the first public release.
 - Drag-and-drop ordering inside each rule group.
 - Default `Editing Status` rules for `To Do`, `In Progress`, and `Done`.
 - Smart folder inheritance for enabled folders.
-- Folder context-menu actions under `Metadata Labels`.
+- Folder context-menu actions under `Metadata Visuals`.
 - Bulk metadata updates for selected notes and folders.
 - Optional one-time import of field definitions from known local sources.
 - Standalone operation after import; no runtime dependency on Metadata Menu or any other plugin.
@@ -52,13 +62,13 @@ Screenshots will be added before the first public release.
 2. Create this folder in your vault:
 
 ```text
-<vault>/.obsidian/plugins/metadata-labels
+<vault>/.obsidian/plugins/metadata-visuals
 ```
 
 3. Put the three release files into that folder.
 4. In Obsidian, open Settings -> Community plugins.
 5. Reload plugins if needed.
-6. Enable `Metadata Labels`.
+6. Enable `Metadata Visuals`.
 
 ### Manual Testing From Source
 
@@ -75,17 +85,17 @@ For a complete walkthrough, see [USER_GUIDE.md](USER_GUIDE.md).
 
 ### Create A Rule Group
 
-1. Open Settings -> Metadata Labels.
+1. Open Settings -> Metadata Visuals.
 2. In the Rules header, choose a metadata field from the `Select` field.
 3. Click `Add rule`.
-4. Metadata Labels imports known field definitions if available, then creates one row for every known value for that field.
+4. Metadata Visuals imports known field definitions if available, then creates one row for every known value for that field.
 
 Known values come from two places:
 
-- values imported into Metadata Labels' own data file;
+- values imported into Metadata Visuals' own data file;
 - values already found in note frontmatter.
 
-If no external definitions are found, Metadata Labels silently falls back to values found in notes.
+If no external definitions are found, Metadata Visuals silently falls back to values found in notes.
 
 ### Configure Rule Rows
 
@@ -130,7 +140,7 @@ Only matching field/value pairs are coloured. Unrelated property values are left
 Smart folders let a folder inherit a visual status from descendant notes.
 
 1. Right-click a folder in the File Explorer.
-2. Choose `Metadata Labels > Enable smart folder rule`.
+2. Choose `Metadata Visuals > Enable smart folder rule`.
 3. In settings, enable `Apply to enabled folders` for the active File Explorer rule group.
 
 For Editing Status-style workflows, folder aggregation is:
@@ -145,10 +155,10 @@ Folder-note/dashboard files that directly represent the folder are ignored so a 
 
 ### Bulk Metadata Updates
 
-Metadata Labels adds bulk update actions to File Explorer context menus:
+Metadata Visuals adds bulk update actions to File Explorer context menus:
 
 ```text
-Metadata Labels >
+Metadata Visuals >
   Apply Editing Status >
     To Do
     In Progress
@@ -166,19 +176,19 @@ Selected folders update every descendant markdown note. Existing frontmatter is 
 
 ## Field Definition Import
 
-Metadata Labels can import configured field values from known local definition files, currently including Metadata Menu's `data.json` when present.
+Metadata Visuals can import configured field values from known local definition files, currently including Metadata Menu's `data.json` when present.
 
 The import is optional and one-time:
 
-- imported values are copied into Metadata Labels' own `data.json`;
-- Metadata Labels continues to work if the source plugin is disabled or removed;
+- imported values are copied into Metadata Visuals' own `data.json`;
+- Metadata Visuals continues to work if the source plugin is disabled or removed;
 - no runtime dependency is created.
 
 The import helps with values that are configured but not yet used in any note.
 
 ## Compatibility
 
-Metadata Labels is maintained for Obsidian 1.12.7 compatibility.
+Metadata Visuals is maintained for Obsidian 1.12.7 compatibility.
 
 Important compatibility choices:
 
@@ -245,11 +255,11 @@ Before publishing a GitHub release:
 
 Report bugs and feature requests here:
 
-- Issues: https://github.com/anthony/obsidian-metadata-labels/issues
-- Discussions: https://github.com/anthony/obsidian-metadata-labels/discussions
+- Issues: https://github.com/anthony/obsidian-metadata-visuals/issues
+- Discussions: https://github.com/anthony/obsidian-metadata-visuals/discussions
 
 These links are placeholders until the public GitHub repository is created.
 
 ## License
 
-Metadata Labels is released under the 0BSD license. See [LICENSE](LICENSE).
+Metadata Visuals is released under the 0BSD license. See [LICENSE](LICENSE).

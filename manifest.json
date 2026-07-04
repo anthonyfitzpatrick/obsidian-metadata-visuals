@@ -1,9 +1,9 @@
 {
-	"id": "metadata-labels",
-	"name": "Metadata Labels",
+	"id": "metadata-visuals",
+	"name": "Metadata Visuals",
 	"version": "0.1.0",
 	"minAppVersion": "1.0.0",
-	"description": "Visual labels from frontmatter metadata for notes, folders, and properties.",
+	"description": "A metadata-driven visual engine for Obsidian.",
 	"author": "Anthony Fitzpatrick",
 	"isDesktopOnly": false
 }

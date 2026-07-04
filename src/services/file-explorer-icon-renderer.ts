@@ -9,18 +9,18 @@ import type {
 } from 'obsidian';
 
 import { MetadataRuleMatcher } from './metadata-rule-matcher';
-import { MetadataLabelRule } from '../types';
+import { MetadataVisualRule } from '../types';
 
-const ICON_CLASS = 'metadata-labels-file-icon';
-const DECORATED_CLASS = 'metadata-labels-file-has-icon';
-const COLOURED_NAME_CLASS = 'metadata-labels-file-has-coloured-name';
+const ICON_CLASS = 'metadata-visuals-file-icon';
+const DECORATED_CLASS = 'metadata-visuals-file-has-icon';
+const COLOURED_NAME_CLASS = 'metadata-visuals-file-has-coloured-name';
 const STATUS_TODO = 'To Do';
 const STATUS_IN_PROGRESS = 'In Progress';
 const STATUS_DONE = 'Done';
 const REFRESH_DELAY_MS = 50;
 
 /**
- * Renders Metadata Labels visuals into Obsidian's File Explorer.
+ * Renders Metadata Visuals decorations into Obsidian's File Explorer.
  *
  * This service owns all DOM mutation for file and folder rows: adding icons,
  * applying inline filename colours, removing stale decorations, and refreshing
@@ -36,7 +36,7 @@ export class FileExplorerIconRenderer {
 	constructor(
 		private readonly app: App,
 		private readonly matcher: MetadataRuleMatcher,
-		private readonly getRules: () => MetadataLabelRule[],
+		private readonly getRules: () => MetadataVisualRule[],
 		private readonly getSmartFolderPaths: () => string[],
 		private readonly getSmartFolderFields: () => string[],
 	) {}
@@ -164,7 +164,7 @@ export class FileExplorerIconRenderer {
 	}
 
 	/**
-	 * Removes every Metadata Labels decoration for one file or folder path.
+	 * Removes every Metadata Visuals decoration for one file or folder path.
 	 *
 	 * Cleanup removes inserted icon spans, the CSS class used to mark decorated
 	 * rows, and the inline colour applied to the filename content. This method is
@@ -252,7 +252,7 @@ export class FileExplorerIconRenderer {
 	private applyRule(
 		titleEl: HTMLElement,
 		contentEl: HTMLElement,
-		rule: MetadataLabelRule,
+		rule: MetadataVisualRule,
 	): void {
 		if (rule.showIcon) {
 			const iconEl = titleEl.createSpan({
@@ -286,7 +286,7 @@ export class FileExplorerIconRenderer {
 	 * that status is mapped back to the matching rule so the folder inherits the
 	 * configured icon, colour, showIcon, colourFilename, and target behaviour.
 	 */
-	private getSmartFolderRule(folder: TFolder): MetadataLabelRule | null {
+	private getSmartFolderRule(folder: TFolder): MetadataVisualRule | null {
 		const editingStatusRules = this.getEditingStatusRules();
 		if (!editingStatusRules) {
 			return null;
@@ -316,9 +316,9 @@ export class FileExplorerIconRenderer {
 	 */
 	private getEditingStatusRules(): {
 		field: string;
-		rulesByValue: Map<string, MetadataLabelRule>;
+		rulesByValue: Map<string, MetadataVisualRule>;
 	} | null {
-		const groups = new Map<string, MetadataLabelRule[]>();
+		const groups = new Map<string, MetadataVisualRule[]>();
 		const smartFolderFields = new Set(this.getSmartFolderFields());
 
 		for (const rule of this.getRules()) {
@@ -341,7 +341,7 @@ export class FileExplorerIconRenderer {
 		}
 
 		for (const [field, rules] of groups) {
-			const rulesByValue = new Map<string, MetadataLabelRule>();
+			const rulesByValue = new Map<string, MetadataVisualRule>();
 
 			for (const rule of rules) {
 				rulesByValue.set(this.normalizeStatusValue(rule.value), rule);

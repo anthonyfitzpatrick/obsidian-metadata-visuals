@@ -14,12 +14,12 @@ import type { MenuItem } from 'obsidian';
 import { FileExplorerIconRenderer } from './services/file-explorer-icon-renderer';
 import { MetadataPropertiesRenderer } from './services/metadata-properties-renderer';
 import { MetadataRuleMatcher } from './services/metadata-rule-matcher';
-import { MetadataLabelsSettingsTab } from './settings-tab';
+import { MetadataVisualsSettingsTab } from './settings-tab';
 import {
 	DEFAULT_SETTINGS,
-	MetadataLabelRule,
-	MetadataLabelRuleTarget,
-	MetadataLabelsSettings,
+	MetadataVisualRule,
+	MetadataVisualRuleTarget,
+	MetadataVisualsSettings,
 } from './types';
 
 /**
@@ -31,8 +31,8 @@ import {
  * in separate services so this file stays focused on lifecycle, persistence,
  * context menu actions, and bulk metadata writes.
  */
-export default class MetadataLabelsPlugin extends Plugin {
-	settings: MetadataLabelsSettings = DEFAULT_SETTINGS;
+export default class MetadataVisualsPlugin extends Plugin {
+	settings: MetadataVisualsSettings = DEFAULT_SETTINGS;
 	private matcher!: MetadataRuleMatcher;
 	private explorerIcons!: FileExplorerIconRenderer;
 	private metadataProperties!: MetadataPropertiesRenderer;
@@ -64,7 +64,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 			() => this.settings.colourMetadata,
 		);
 
-		this.addSettingTab(new MetadataLabelsSettingsTab(this.app, this));
+		this.addSettingTab(new MetadataVisualsSettingsTab(this.app, this));
 
 		this.registerEvent(
 			this.app.metadataCache.on('changed', (file) => {
@@ -108,13 +108,13 @@ export default class MetadataLabelsPlugin extends Plugin {
 
 		this.registerEvent(
 			this.app.workspace.on('file-menu', (menu, file) => {
-				this.addMetadataLabelsMenuItem(menu, [file], file);
+				this.addMetadataVisualsMenuItem(menu, [file], file);
 			}),
 		);
 
 		this.registerEvent(
 			this.app.workspace.on('files-menu', (menu, files) => {
-				this.addMetadataLabelsMenuItem(menu, files);
+				this.addMetadataVisualsMenuItem(menu, files);
 			}),
 		);
 
@@ -195,7 +195,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 * group, which prevents multiple metadata fields from competing to colour
 	 * the same note or folder row.
 	 */
-	private getFileExplorerRules(): MetadataLabelRule[] {
+	private getFileExplorerRules(): MetadataVisualRule[] {
 		this.ensureFileExplorerField();
 
 		return this.settings.rules.filter((rule) => rule.field === this.settings.fileExplorerField);
@@ -271,7 +271,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 * because they control how existing rules are interpreted rather than the
 	 * rule rows themselves.
 	 */
-	private parseSettings(data: unknown): MetadataLabelsSettings {
+	private parseSettings(data: unknown): MetadataVisualsSettings {
 		if (!this.isRecord(data) || !Array.isArray(data.rules)) {
 			return {
 				rules: [],
@@ -285,7 +285,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 		}
 
 		const rules = data.rules
-			.filter((rule) => this.isMetadataLabelRuleData(rule))
+			.filter((rule) => this.isMetadataVisualRuleData(rule))
 			.map((rule) => ({
 				...rule,
 				value: this.normalizeStatusValue(rule.value),
@@ -324,10 +324,10 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 * fields from all supported historical rule versions and lets parseSettings
 	 * fill in optional fields that may be missing from older saved data.
 	 */
-	private isMetadataLabelRuleData(
+	private isMetadataVisualRuleData(
 		value: unknown,
-	): value is Omit<MetadataLabelRule, 'colourFilename' | 'showIcon' | 'target'>
-		& Partial<Pick<MetadataLabelRule, 'colourFilename' | 'showIcon' | 'target'>> {
+	): value is Omit<MetadataVisualRule, 'colourFilename' | 'showIcon' | 'target'>
+		& Partial<Pick<MetadataVisualRule, 'colourFilename' | 'showIcon' | 'target'>> {
 		return this.isRecord(value)
 			&& typeof value.id === 'string'
 			&& typeof value.field === 'string'
@@ -364,7 +364,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 * Unknown values fall back to "both" so older or manually edited data keeps
 	 * producing visible labels instead of silently disabling a rule.
 	 */
-	private parseRuleTarget(value: unknown): MetadataLabelRuleTarget {
+	private parseRuleTarget(value: unknown): MetadataVisualRuleTarget {
 		if (value === 'notes' || value === 'folders' || value === 'both') {
 			return value;
 		}
@@ -380,7 +380,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 * Editing Status here preserves that behaviour for existing users while new
 	 * installs still start with no smart folder paths enabled.
 	 */
-	private getDefaultSmartFolderFields(rules: MetadataLabelRule[]): string[] {
+	private getDefaultSmartFolderFields(rules: MetadataVisualRule[]): string[] {
 		return rules.some((rule) => rule.field === 'Editing Status')
 			? ['Editing Status']
 			: [];
@@ -397,7 +397,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 */
 	private parseFileExplorerField(
 		value: unknown,
-		rules: MetadataLabelRule[],
+		rules: MetadataVisualRule[],
 	): string {
 		const fields: string[] = [];
 
@@ -427,7 +427,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 */
 	private parseAllowedValues(
 		value: unknown,
-		rules: MetadataLabelRule[],
+		rules: MetadataVisualRule[],
 	): Record<string, string[]> {
 		const allowedValues: Record<string, string[]> = {};
 
@@ -485,21 +485,21 @@ export default class MetadataLabelsPlugin extends Plugin {
 	}
 
 	/**
-	 * Adds the top-level "Metadata Labels" context-menu item for File Explorer
+	 * Adds the top-level "Metadata Visuals" context-menu item for File Explorer
 	 * single-item and multi-item menus.
 	 *
 	 * Folder right-clicks include the smart-folder enable/disable action.
 	 * Every note/folder selection also receives bulk metadata update submenus
 	 * generated from the current rule list.
 	 */
-	private addMetadataLabelsMenuItem(
+	private addMetadataVisualsMenuItem(
 		menu: Menu,
 		files: TAbstractFile[],
 		clickedFile?: TAbstractFile,
 	): void {
 		menu.addItem((item) => {
 			item
-				.setTitle('Metadata Labels')
+				.setTitle('Metadata Visuals')
 				.setIcon('tags');
 
 			const submenu = this.getSubmenu(item);
@@ -549,7 +549,7 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 * Adds bulk metadata update submenus based on configured rule groups.
 	 *
 	 * For a field such as Editing Status, the menu becomes:
-	 * Metadata Labels > Apply Editing Status > To Do / In Progress / Done.
+	 * Metadata Visuals > Apply Editing Status > To Do / In Progress / Done.
 	 * Values are taken from rule.value, which is the raw frontmatter value, not
 	 * the icon, emoji, preview text, or colour.
 	 */
@@ -588,8 +588,8 @@ export default class MetadataLabelsPlugin extends Plugin {
 	 * Empty placeholder rules are skipped, and duplicate values within the same
 	 * field are collapsed so the user does not see repeated menu actions.
 	 */
-	private getBulkUpdateRuleGroups(): Map<string, MetadataLabelRule[]> {
-		const groups = new Map<string, MetadataLabelRule[]>();
+	private getBulkUpdateRuleGroups(): Map<string, MetadataVisualRule[]> {
+		const groups = new Map<string, MetadataVisualRule[]>();
 
 		for (const rule of this.settings.rules) {
 			const field = rule.field.trim();
@@ -635,8 +635,8 @@ export default class MetadataLabelsPlugin extends Plugin {
 
 			this.explorerIcons.scheduleRefreshAll();
 		} catch (error) {
-			console.error('Metadata Labels: failed to update metadata.', error);
-			new Notice('Metadata Labels: failed to update metadata.');
+			console.error('Metadata Visuals: failed to update metadata.', error);
+			new Notice('Metadata Visuals: failed to update metadata.');
 		}
 	}
 
