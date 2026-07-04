@@ -72,6 +72,7 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		const { containerEl } = this;
 		const fields = this.getFrontmatterFields();
 
+		this.normalizeRuleValues();
 		this.ensureDefaultRules();
 
 		containerEl.empty();
@@ -121,7 +122,12 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 							return;
 						}
 
-						this.plugin.settings.rules.push(this.createRuleForField(selectedNewField));
+						this.plugin.settings.rules.push(
+							this.createRuleForField(
+								selectedNewField,
+								this.getFrontmatterValues(selectedNewField)[0] ?? '',
+							),
+						);
 						await this.plugin.saveSettings();
 						this.display();
 					});
@@ -176,12 +182,21 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 				toggle.toggleEl.setAttribute('aria-label', 'Apply to enabled folders');
+				toggle.toggleEl.insertAdjacentElement(
+					'afterend',
+					createSpan({
+						cls: 'metadata-labels-smart-folder-toggle-label',
+						text: 'Apply to enabled folders',
+					}),
+				);
 			})
 			.addButton((button) => {
 				button
 					.setButtonText('Add row')
 					.onClick(async () => {
-						this.plugin.settings.rules.push(this.createRuleForField(field));
+						this.plugin.settings.rules.push(
+							this.createRuleForField(field, this.getFrontmatterValues(field)[0] ?? ''),
+						);
 						await this.plugin.saveSettings();
 						this.display();
 					});
@@ -202,11 +217,6 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 						this.display();
 					});
 			});
-
-		headerEl.createSpan({
-			cls: 'metadata-labels-smart-folder-toggle-label',
-			text: 'Apply to enabled folders',
-		});
 
 		const tableEl = groupEl.createDiv('metadata-labels-rule-table');
 		const tableHeaderEl = tableEl.createDiv('metadata-labels-rule-table-header');
@@ -261,11 +271,12 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		const valueInput = new TextComponent(valueEl);
 
 		valueInput.inputEl.setAttribute('aria-label', 'Metadata value');
-		this.configureText(valueInput, rule.value, 'Draft', async (value) => {
-			rule.value = value.trim();
+		this.configureValueSelector(valueInput, rule, this.getFrontmatterValues(rule.field), async (value) => {
+			rule.value = value;
 			this.updatePreview(previewIconEl, previewTextEl, rule);
 			await this.plugin.saveSettings();
 		});
+		this.updatePreview(previewIconEl, previewTextEl, rule);
 
 		const iconDropdown = new DropdownComponent(iconEl);
 
@@ -428,23 +439,85 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	}
 
 	/**
-	 * Configures a text input with an async save callback.
+	 * Configures a text input as a constrained value selector for one metadata
+	 * field.
 	 *
-	 * The wrapper keeps renderRule focused on rule semantics rather than the
-	 * repetitive TextComponent onChange plumbing.
+	 * The selector uses normalised values collected from notes that already have
+	 * the row's metadata field. This keeps stored rule values clean and prevents
+	 * typos from creating rules that cannot match the vault. Invalid typed values
+	 * are rejected and the input returns to the last valid selected value.
 	 */
-	private configureText(
+	private configureValueSelector(
 		text: TextComponent,
-		value: string,
-		placeholder: string,
-		onChange: (value: string) => Promise<void>,
+		rule: MetadataLabelRule,
+		values: string[],
+		onSelect: (value: string) => void | Promise<void>,
 	): void {
+		const inputEl = text.inputEl;
+		const normalizedRuleValue = this.normalizeStatusValue(rule.value);
+		const initialValue = values.length === 0
+			? normalizedRuleValue
+			: values.includes(normalizedRuleValue)
+			? normalizedRuleValue
+			: values[0] ?? '';
+		const listId = `metadata-labels-values-${crypto.randomUUID()}`;
+		const dataListEl = inputEl.parentElement?.createEl('datalist');
+
+		if (rule.value !== initialValue) {
+			rule.value = initialValue;
+			void this.plugin.saveSettings();
+		}
+
+		if (dataListEl) {
+			dataListEl.id = listId;
+			inputEl.setAttribute('list', listId);
+
+			for (const value of values) {
+				dataListEl.createEl('option', { attr: { value } });
+			}
+		}
+
+		inputEl.setAttribute('autocomplete', 'off');
+		inputEl.setAttribute('aria-label', 'Metadata value');
+
+		let selectedValue = initialValue;
+
 		text
-			.setValue(value)
-			.setPlaceholder(placeholder)
+			.setValue(selectedValue)
+			.setPlaceholder(values.length > 0 ? 'Search values' : 'No values found')
 			.onChange((nextValue) => {
-				void onChange(nextValue);
+				const normalizedValue = this.normalizeStatusValue(nextValue);
+
+				if (!values.includes(normalizedValue)) {
+					return;
+				}
+
+				selectedValue = normalizedValue;
+				inputEl.value = selectedValue;
+				void onSelect(selectedValue);
 			});
+		inputEl.disabled = values.length === 0;
+
+		inputEl.addEventListener('change', () => {
+			const normalizedValue = this.normalizeStatusValue(inputEl.value);
+
+			if (!values.includes(normalizedValue)) {
+				inputEl.value = selectedValue;
+				return;
+			}
+
+			selectedValue = normalizedValue;
+			inputEl.value = selectedValue;
+			void onSelect(selectedValue);
+		});
+
+		inputEl.addEventListener('blur', () => {
+			const normalizedValue = this.normalizeStatusValue(inputEl.value);
+
+			if (!values.includes(normalizedValue)) {
+				inputEl.value = selectedValue;
+			}
+		});
 	}
 
 	/**
@@ -504,10 +577,11 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	/**
 	 * Creates a blank new row under an existing metadata field group.
 	 */
-	private createRuleForField(field: string): MetadataLabelRule {
+	private createRuleForField(field: string, value = ''): MetadataLabelRule {
 		return {
 			...createDefaultRule(),
 			field,
+			value,
 			icon: 'circle',
 			showIcon: true,
 			target: 'both',
@@ -573,6 +647,56 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 	}
 
 	/**
+	 * Scans existing notes for the selectable values of one metadata field.
+	 *
+	 * Values are normalised before entering the selector, so notes containing
+	 * "🔴 To Do" contribute the clean selectable value "To Do". Arrays are
+	 * flattened because YAML frontmatter fields can store multiple values.
+	 */
+	private getFrontmatterValues(field: string): string[] {
+		const values = new Set<string>();
+
+		for (const file of this.app.vault.getMarkdownFiles()) {
+			const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+
+			if (!frontmatter || !(field in frontmatter)) {
+				continue;
+			}
+
+			for (const value of this.getNormalizedMetadataValues(frontmatter[field])) {
+				values.add(value);
+			}
+		}
+
+		return Array.from(values).sort((a, b) => a.localeCompare(b));
+	}
+
+	/**
+	 * Extracts normalised string values from a frontmatter scalar or array.
+	 */
+	private getNormalizedMetadataValues(value: unknown): string[] {
+		if (Array.isArray(value)) {
+			return value.flatMap((item) => this.getNormalizedMetadataValues(item));
+		}
+
+		if (
+			value === null
+			|| value === undefined
+			|| (
+				typeof value !== 'string'
+				&& typeof value !== 'number'
+				&& typeof value !== 'boolean'
+			)
+		) {
+			return [];
+		}
+
+		const normalizedValue = this.normalizeStatusValue(String(value));
+
+		return normalizedValue ? [normalizedValue] : [];
+	}
+
+	/**
 	 * Groups rules by metadata field for the settings table.
 	 *
 	 * Legacy or partially migrated rules without a field are displayed under
@@ -590,6 +714,40 @@ export class MetadataLabelsSettingsTab extends PluginSettingTab {
 		}
 
 		return groups;
+	}
+
+	/**
+	 * Cleans saved rule values before rendering the settings table.
+	 *
+	 * This migrates legacy emoji-prefixed values out of the stored Value field.
+	 * The icon, shape, and colour columns remain responsible for the visual
+	 * status marker shown in settings previews and the File Explorer.
+	 */
+	private normalizeRuleValues(): void {
+		let changed = false;
+
+		for (const rule of this.plugin.settings.rules) {
+			const normalizedValue = this.normalizeStatusValue(rule.value);
+
+			if (rule.value !== normalizedValue) {
+				rule.value = normalizedValue;
+				changed = true;
+			}
+		}
+
+		if (changed) {
+			void this.plugin.saveSettings();
+		}
+	}
+
+	/**
+	 * Removes leading status emoji from metadata values shown or stored by the
+	 * settings UI.
+	 */
+	private normalizeStatusValue(value: string): string {
+		return value
+			.replace(/^[\s🔴🟠🟢🟡🔵🟣⚫⚪🟤]+/u, '')
+			.trim();
 	}
 
 	/**

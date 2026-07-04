@@ -20,6 +20,7 @@ The icon shape, icon colour, filename colour, and note/folder target behaviour a
 - Provides default Editing Status rules for `To Do`, `In Progress`, and `Done`.
 - Groups settings by metadata field in a compact table UI.
 - Uses a field selector based on existing vault frontmatter fields.
+- Uses a value selector based on existing values for the selected metadata field.
 - Supports smart folder inheritance for enabled folders.
 - Adds context-menu actions for bulk metadata updates across selected notes and folders.
 - Normalises legacy emoji-prefixed values such as `🔴 To Do`, `🟠 In Progress`, and `🟢 Done`.
@@ -69,6 +70,8 @@ Each rule stores:
 - `target`: whether the rule applies to notes, folders, or both.
 
 The first matching note rule is applied to a note. Rules targeted only at folders are skipped for note matching.
+
+In settings, both metadata fields and rule values are selected from values already found in the vault. For example, if the `Editing Status` field currently contains `To Do`, `In Progress`, and `Done`, those are the selectable values for that group. Typed values that are not present for the selected field are rejected.
 
 Values are compared after normalisation. This preserves compatibility with older notes that may have stored status emoji in the metadata value. For example, all of these can match a rule value of `To Do`:
 

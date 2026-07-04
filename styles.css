@@ -48,10 +48,15 @@
 	padding: 0;
 }
 
+.metadata-labels-rule-group-header .setting-item-control {
+	align-items: center;
+	gap: 0.5rem;
+}
+
 .metadata-labels-smart-folder-toggle-label {
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
-	margin-left: -0.75rem;
+	white-space: nowrap;
 }
 
 .metadata-labels-rule-group-title .setting-item {
