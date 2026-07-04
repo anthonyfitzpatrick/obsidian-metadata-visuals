@@ -158,9 +158,9 @@ The metadata field name is read-only. Field selection happens only when creating
 
 There is no manual `Add row` or `Add missing rows` control. A group is generated from the available values for its field. If you need more rows, add or import the missing values and recreate the group.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 05 placeholder:</strong> Upload a collapsed-group screenshot named <code>screenshots/collapsed-rule-group.png</code>. It should show one collapsed rule group header with the chevron, bold metadata field name, label count, <code>Use for File Explorer</code>, <code>Apply to enabled folders</code>, and <code>Delete rule</code> button all visible in the same row.
-</div>
+<p align="center">
+  <img src="screenshots/collapsed-rule-group.png" alt="Collapsed Metadata Visuals Editing Status rule group header with toggles and Delete rule button." width="760">
+</p>
 
 ## Rule Table Columns
 
