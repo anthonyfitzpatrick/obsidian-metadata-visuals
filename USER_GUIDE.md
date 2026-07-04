@@ -18,9 +18,9 @@ Importance: Critical
 
 The plugin then displays configured colours and icons in the File Explorer, in folder rows, and in the visible note Properties panel. It can also bulk-update frontmatter values from the File Explorer context menu.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 01 placeholder:</strong> Upload a high-level screenshot named <code>screenshots/metadata-visuals-overview.png</code>. It should show Obsidian with the File Explorer visible on the left, several notes using Metadata Visuals icons/coloured names, and an open note showing coloured Properties values at the top. Use a small sample vault with non-private note names so the screenshot is safe for public documentation.
-</div>
+<p align="center">
+  <img src="screenshots/metadata-visuals-overview.png" alt="Obsidian showing Metadata Visuals File Explorer icons, coloured note names, and coloured Properties values." width="960">
+</p>
 
 ## Installation
 
