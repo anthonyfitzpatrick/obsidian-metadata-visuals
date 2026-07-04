@@ -65,11 +65,11 @@ export const DEFAULT_SETTINGS: MetadataVisualsSettings = {
 };
 
 /**
- * Creates a new placeholder rule with safe visual defaults.
+ * Creates a new row for a user-created rule group with safe visual fallbacks.
  *
- * The settings tab fills in the metadata field and often overrides the icon or
- * colour for seeded Editing Status rules. Defaults are intentionally visible so
- * a partially configured row still previews clearly in the settings table.
+ * Metadata Visuals never creates rule groups automatically. These values are
+ * used only after the user explicitly creates a group from a selected metadata
+ * field, so the resulting rows are visible and editable in the settings table.
  */
 export const createDefaultRule = (): MetadataVisualRule => ({
 	id: crypto.randomUUID(),

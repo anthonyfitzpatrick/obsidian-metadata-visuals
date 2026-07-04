@@ -51,7 +51,6 @@ Screenshots will be added before the first public release.
 - Drag-and-drop ordering inside each rule group.
 - Read-only value rows generated from known metadata values.
 - Automatic field-definition import when adding a rule group.
-- Default `Editing Status` rules for `To Do`, `In Progress`, and `Done`.
 - Smart folder inheritance for enabled folders.
 - Folder context-menu actions under `Metadata Visuals`.
 - Bulk metadata updates for selected notes and folders.
@@ -136,7 +135,7 @@ Rows are generated from the field's available values. Values are read-only in th
 
 Only one metadata field group can control File Explorer note and folder visuals at a time.
 
-Turn on `Use for File Explorer` for the group that should drive icons and name colours. Enabling it for one group automatically makes that group the active File Explorer source. If no group has been selected in existing settings, Metadata Visuals migrates safely by preferring `Editing Status` when present, otherwise the first available group.
+Turn on `Use for File Explorer` for the group that should drive icons and name colours. Enabling it for one group automatically makes that group the active File Explorer source. If no group has been selected in existing settings, Metadata Visuals migrates safely by using the first available saved rule group.
 
 Metadata/property colouring still uses all matching rule groups.
 

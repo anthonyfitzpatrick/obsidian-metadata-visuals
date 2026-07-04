@@ -44,12 +44,6 @@ const TARGET_OPTIONS: Record<MetadataVisualRuleTarget, string> = {
 };
 
 const WORKFLOW_VALUE_ORDER = ['To Do', 'In Progress', 'Done'];
-const WORKFLOW_VALUE_COLORS: Record<string, string> = {
-	'To Do': '#e03131',
-	'In Progress': '#f08c00',
-	Done: '#2f9e44',
-};
-
 interface FieldDefinitionImportResult {
 	foundDefinitions: boolean;
 	changed: boolean;
@@ -90,7 +84,6 @@ export class MetadataVisualsSettingsTab extends PluginSettingTab {
 
 		this.normalizeRuleValues();
 		this.normalizeAllowedValues();
-		this.ensureDefaultRules();
 		this.importFieldDefinitionsOnFirstDisplay();
 
 		const fields = this.getKnownMetadataFields();
@@ -860,62 +853,6 @@ export class MetadataVisualsSettingsTab extends PluginSettingTab {
 
 		return selector;
 	}
-
-	/**
-	 * Seeds first-run/default rules when no useful rules exist.
-	 *
-	 * Empty placeholder rows are not useful because they cannot match metadata.
-	 * If every saved row is empty or placeholder-like, the settings page replaces
-	 * them with the three writer-friendly Editing Status defaults.
-	 */
-	private ensureDefaultRules(): void {
-		if (this.plugin.settings.rules.some((rule) => this.isUsefulRule(rule))) {
-			return;
-		}
-
-		this.plugin.settings.rules.splice(
-			0,
-			this.plugin.settings.rules.length,
-			this.createEditingStatusRule('To Do', '#e03131'),
-			this.createEditingStatusRule('In Progress', '#f08c00'),
-			this.createEditingStatusRule('Done', '#2f9e44'),
-		);
-		this.plugin.settings.allowedValues['Editing Status'] = ['To Do', 'In Progress', 'Done'];
-
-		void this.plugin.saveSettings();
-	}
-
-	/**
-	 * Returns whether a rule has enough data to match a note or folder status.
-	 */
-	private isUsefulRule(rule: MetadataVisualRule): boolean {
-		return rule.field.trim() !== ''
-			&& rule.value.trim() !== ''
-			&& rule.icon.trim() !== '';
-	}
-
-	/**
-	 * Creates one of the seeded Editing Status rules.
-	 *
-	 * The raw value is stored without emoji. Icon shape and colour live in their
-	 * own columns, and both note names and icons are enabled by default.
-	 */
-	private createEditingStatusRule(
-		value: string,
-		color: string,
-	): MetadataVisualRule {
-		return {
-			...createDefaultRule(),
-			field: 'Editing Status',
-			value,
-			icon: 'circle',
-			color,
-			colourFilename: true,
-			showIcon: true,
-			target: 'both',
-		};
-	}
-
 	/**
 	 * Creates a blank new row under an existing metadata field group.
 	 */
@@ -924,8 +861,6 @@ export class MetadataVisualsSettingsTab extends PluginSettingTab {
 			...createDefaultRule(),
 			field,
 			value,
-			icon: 'circle',
-			color: WORKFLOW_VALUE_COLORS[value] ?? createDefaultRule().color,
 			colourFilename: true,
 			showIcon: true,
 			target: 'both',
@@ -992,7 +927,7 @@ export class MetadataVisualsSettingsTab extends PluginSettingTab {
 	 * Returns the values available for rule rows under a field.
 	 *
 	 * Plugin-owned registry values and discovered frontmatter values are merged.
-	 * The registry is populated by first-run defaults, migrations, and optional
+	 * The registry is populated only by saved settings and optional
 	 * one-time imports from external field-definition files. Once imported, the
 	 * plugin no longer needs the source plugin or file to remain installed.
 	 */
@@ -1056,7 +991,7 @@ export class MetadataVisualsSettingsTab extends PluginSettingTab {
 	 * Builds the metadata-field selector source.
 	 *
 	 * Core Obsidian only knows fields already used in notes, while Metadata
-	 * Labels can also know imported field definitions. Merging both sources lets
+	 * Visuals can also know imported field definitions. Merging both sources lets
 	 * Add rule offer fields whose possible values were imported but are not yet
 	 * present in any note frontmatter.
 	 */
@@ -1384,8 +1319,7 @@ export class MetadataVisualsSettingsTab extends PluginSettingTab {
 	 * Cleans all plugin-owned allowed values before rendering controls.
 	 *
 	 * This keeps data.json standalone and predictable: values are normalised,
-	 * duplicates are removed, and default Editing Status values are added when
-	 * needed for existing Editing Status rule groups.
+	 * duplicates are removed, and no new field/value lists are created.
 	 */
 	private normalizeAllowedValues(): void {
 		let changed = false;
@@ -1397,14 +1331,6 @@ export class MetadataVisualsSettingsTab extends PluginSettingTab {
 				this.plugin.settings.allowedValues[field] = normalizedValues;
 				changed = true;
 			}
-		}
-
-		if (
-			this.plugin.settings.rules.some((rule) => rule.field === 'Editing Status')
-			&& !this.plugin.settings.allowedValues['Editing Status']
-		) {
-			this.plugin.settings.allowedValues['Editing Status'] = ['To Do', 'In Progress', 'Done'];
-			changed = true;
 		}
 
 		if (changed) {

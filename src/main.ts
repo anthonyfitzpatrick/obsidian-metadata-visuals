@@ -158,7 +158,8 @@ export default class MetadataVisualsPlugin extends Plugin {
 	 * when loading older plugin data.
 	 */
 	async loadSettings(): Promise<void> {
-		const savedSettings = this.parseSettings(await this.loadData());
+		const rawSettings: unknown = await this.loadData();
+		const savedSettings = this.parseSettings(rawSettings);
 
 		this.settings = {
 			...DEFAULT_SETTINGS,
@@ -171,6 +172,10 @@ export default class MetadataVisualsPlugin extends Plugin {
 			fileExplorerField: savedSettings.fileExplorerField,
 			collapsedRuleGroups: savedSettings.collapsedRuleGroups,
 		};
+
+		if (!this.isRecord(rawSettings)) {
+			await this.saveData(this.settings);
+		}
 	}
 
 	/**
@@ -220,9 +225,7 @@ export default class MetadataVisualsPlugin extends Plugin {
 			return;
 		}
 
-		this.settings.fileExplorerField = fields.includes('Editing Status')
-			? 'Editing Status'
-			: fields[0] ?? '';
+		this.settings.fileExplorerField = fields[0] ?? '';
 	}
 
 	/**
@@ -262,11 +265,10 @@ export default class MetadataVisualsPlugin extends Plugin {
 	 *
 	 * This is the plugin's data migration layer. It ignores malformed rules,
 	 * normalises old emoji-prefixed status defaults such as "🔴 To Do" into
-	 * "To Do", and supplies defaults for fields added after earlier releases:
+	 * "To Do", and supplies default values for fields added after earlier releases:
 	 * colourFilename defaults to true, showIcon defaults to true, and target
-	 * defaults to "both". Smart folder field enablement and allowed value lists
-	 * are also backfilled for older users who already had Editing Status rules
-	 * before those settings existed. The single File Explorer field and metadata
+	 * defaults to "both". Smart folder field enablement and allowed value lists are preserved
+	 * when present, but never created automatically. The single File Explorer field and metadata
 	 * property-colouring toggle are migrated here as settings-level choices
 	 * because they control how existing rules are interpreted rather than the
 	 * rule rows themselves.
@@ -305,8 +307,8 @@ export default class MetadataVisualsPlugin extends Plugin {
 				: [],
 			smartFolderFields: Array.isArray(data.smartFolderFields)
 				? data.smartFolderFields.filter((field): field is string => typeof field === 'string')
-				: this.getDefaultSmartFolderFields(rules),
-			allowedValues: this.parseAllowedValues(data.allowedValues, rules),
+				: [],
+			allowedValues: this.parseAllowedValues(data.allowedValues),
 			colourMetadata: typeof data.colourMetadata === 'boolean'
 				? data.colourMetadata
 				: true,
@@ -371,29 +373,14 @@ export default class MetadataVisualsPlugin extends Plugin {
 
 		return 'both';
 	}
-
-	/**
-	 * Backfills smart folder inheritance for older settings.
-	 *
-	 * Before smart folder inheritance was controlled per metadata field, the
-	 * Editing Status group was the only supported smart-folder source. Returning
-	 * Editing Status here preserves that behaviour for existing users while new
-	 * installs still start with no smart folder paths enabled.
-	 */
-	private getDefaultSmartFolderFields(rules: MetadataVisualRule[]): string[] {
-		return rules.some((rule) => rule.field === 'Editing Status')
-			? ['Editing Status']
-			: [];
-	}
-
 	/**
 	 * Migrates the single File Explorer source field.
 	 *
 	 * Older builds allowed every matching rule group to compete for File
 	 * Explorer visuals. Public releases use exactly one selected field group so
-	 * note and folder rows have predictable icon/name colour priority. Editing
-	 * Status is preferred because it was the original default group; otherwise
-	 * the first rule group in settings order becomes the source.
+	 * note and folder rows have predictable icon/name colour priority. The first
+	 * rule group in settings order becomes the source when no valid saved
+	 * selection exists.
 	 */
 	private parseFileExplorerField(
 		value: unknown,
@@ -411,10 +398,6 @@ export default class MetadataVisualsPlugin extends Plugin {
 			return value;
 		}
 
-		if (fields.includes('Editing Status')) {
-			return 'Editing Status';
-		}
-
 		return fields[0] ?? '';
 	}
 
@@ -422,12 +405,11 @@ export default class MetadataVisualsPlugin extends Plugin {
 	 * Migrates persisted per-field allowed value lists.
 	 *
 	 * Values are normalised and deduplicated during load so the settings UI can
-	 * trust this plugin-owned vocabulary. When older data has Editing Status
-	 * rules but no allowed values map, the standard workflow values are seeded.
+	 * trust this plugin-owned vocabulary. No values are created here; the map
+	 * only preserves lists that already exist in saved data.
 	 */
 	private parseAllowedValues(
 		value: unknown,
-		rules: MetadataVisualRule[],
 	): Record<string, string[]> {
 		const allowedValues: Record<string, string[]> = {};
 
@@ -447,11 +429,6 @@ export default class MetadataVisualsPlugin extends Plugin {
 				);
 			}
 		}
-
-		if (!allowedValues['Editing Status'] && rules.some((rule) => rule.field === 'Editing Status')) {
-			allowedValues['Editing Status'] = ['To Do', 'In Progress', 'Done'];
-		}
-
 		return allowedValues;
 	}
 

@@ -86,7 +86,6 @@ Known values can come from:
 
 - imported field definitions copied into Metadata Visuals' own settings;
 - values already found in note frontmatter;
-- the built-in Editing Status defaults.
 
 When both imported values and used values exist, Metadata Visuals merges them, removes duplicates, normalises old emoji-prefixed values, and sorts common workflow values as `To Do`, `In Progress`, `Done` before sorting the remaining values alphabetically.
 
@@ -105,9 +104,9 @@ Metadata Visuals creates rows from available values for the selected field. It c
   <img src="screenshots/settings-add-rule.png" alt="Metadata Visuals settings showing the compact Rules header with Colour note metadata, field selector, and Add rule button." width="760">
 </p>
 
-## Default Editing Status Rules
+## Example Editing Status Rules
 
-If no useful rules exist, Metadata Visuals creates three default rules:
+Metadata Visuals does not create any rules automatically. If you want an Editing Status workflow, create an `Editing Status` rule group explicitly. A common setup is:
 
 | Field | Value | Shape | Colour | Icon | Name | Target |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -115,11 +114,9 @@ If no useful rules exist, Metadata Visuals creates three default rules:
 | Editing Status | In Progress | circle | orange | on | on | both |
 | Editing Status | Done | circle | green | on | on | both |
 
-These defaults store clean metadata values. Emoji are not stored in the rule value.
+These example rows store clean metadata values. Emoji are not stored in the rule value.
 
 Older notes that contain values such as `🔴 To Do`, `🟠 In Progress`, or `🟢 Done` still match because Metadata Visuals normalises leading status emoji before comparing values.
-
-The default values are also stored in Metadata Visuals' internal known-value registry so a fresh Editing Status group can regenerate the three rows even if the values are not yet used in notes.
 
 <p align="center">
   <img src="screenshots/default-editing-status-rules.png" alt="Metadata Visuals Editing Status rule group with To Do, In Progress, and Done rows." width="760">
@@ -384,7 +381,7 @@ Editing Status: To Do
 Editing Status: 🔴 To Do
 ```
 
-This exists for backwards compatibility with older notes and older default rules.
+This exists for backwards compatibility with older notes and older rule rows.
 
 ## Recommended Workflows
 
