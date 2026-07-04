@@ -296,3 +296,11 @@ The settings page includes the same links in the About / Support footer.
 ## License
 
 Metadata Visuals is released under the 0BSD license. See [LICENSE](LICENSE).
+
+---
+
+[🐞 Report a bug](https://wolf359.app/metadata-visuals/report-bug/) |
+[💡 Feature request](https://wolf359.app/metadata-visuals/request-feature/) |
+[🌐 wolf359.app](https://wolf359.app/) |
+[📚 Wolf 359 Press](https://wolf359.press/) |
+[☕ Buy me a coffee](https://buymeacoffee.com/wolf359pressab)

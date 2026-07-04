@@ -484,3 +484,11 @@ It does not alter your notes except when you explicitly use bulk metadata update
 2. Remove the plugin folder if desired.
 
 The plugin removes its injected File Explorer and Properties styles when unloaded. Your frontmatter values remain unchanged, except for metadata you intentionally changed through bulk update actions.
+
+---
+
+[🐞 Report a bug](https://wolf359.app/metadata-visuals/report-bug/) |
+[💡 Feature request](https://wolf359.app/metadata-visuals/request-feature/) |
+[🌐 wolf359.app](https://wolf359.app/) |
+[📚 Wolf 359 Press](https://wolf359.press/) |
+[☕ Buy me a coffee](https://buymeacoffee.com/wolf359pressab)
