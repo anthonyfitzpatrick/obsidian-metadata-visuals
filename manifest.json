@@ -2,8 +2,9 @@
 	"id": "metadata-visuals",
 	"name": "Metadata Visuals",
 	"version": "0.1.1",
-	"minAppVersion": "1.0.0",
+	"minAppVersion": "1.12.7",
 	"description": "A metadata-driven visual engine for Obsidian.",
 	"author": "Anthony Fitzpatrick",
-	"isDesktopOnly": false
+	"isDesktopOnly": false,
+	"fundingUrl": "https://buymeacoffee.com/wolf359pressab"
 }

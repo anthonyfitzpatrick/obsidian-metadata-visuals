@@ -1068,16 +1068,9 @@ export class MetadataVisualsSettingsTab extends PluginSettingTab {
 	 * absent, disabled, or later removed.
 	 */
 	private async readMetadataMenuFieldDefinitions(): Promise<Map<string, string[]>> {
-		const definitionsPaths = Array.from(new Set([
-			`${this.app.vault.configDir}/plugins/metadata-menu/data.json`,
-			['.obsidian', 'plugins', 'metadata-menu', 'data.json'].join('/'),
-		]));
+		const definitionsPath = `${this.app.vault.configDir}/plugins/metadata-menu/data.json`;
 
-		for (const definitionsPath of definitionsPaths) {
-			if (!(await this.app.vault.adapter.exists(definitionsPath))) {
-				continue;
-			}
-
+		if (await this.app.vault.adapter.exists(definitionsPath)) {
 			try {
 				return this.parseMetadataMenuData(
 					JSON.parse(await this.app.vault.adapter.read(definitionsPath)) as unknown,
