@@ -26,17 +26,19 @@ Importance: Critical
 ---
 ```
 
-Rules keep the metadata value clean. Icon shape, colour, filename colouring, folder inheritance, and property colouring are display settings managed by the plugin.
+Rules keep the metadata value clean. Icon shape, colour, filename colouring, folder inheritance, bulk metadata updates, and property colouring are display settings managed by the plugin.
 
 ## Screenshots
 
 Screenshots will be added before the first public release.
 
 - Official Metadata Visuals logo: `assets/icon.svg`
+- Settings page with the compact Rules header and About / Support footer
 - File Explorer labels
 - Rule settings table
 - Smart folder inheritance
 - Coloured note Properties values
+- Bulk metadata update context menu
 
 ## Features
 
@@ -47,6 +49,8 @@ Screenshots will be added before the first public release.
 - Rule targets for notes, folders, or both.
 - Compact grouped settings UI with collapsible rule groups.
 - Drag-and-drop ordering inside each rule group.
+- Read-only value rows generated from known metadata values.
+- Automatic field-definition import when adding a rule group.
 - Default `Editing Status` rules for `To Do`, `In Progress`, and `Done`.
 - Smart folder inheritance for enabled folders.
 - Folder context-menu actions under `Metadata Visuals`.
@@ -54,6 +58,7 @@ Screenshots will be added before the first public release.
 - Optional one-time import of field definitions from known local sources.
 - Standalone operation after import; no runtime dependency on Metadata Menu or any other plugin.
 - Legacy value normalisation for emoji-prefixed values such as `🔴 To Do`.
+- Official SVG logo and compact About / Support footer in settings.
 - Classic `PluginSettingTab.display()` settings UI for Obsidian 1.12.7 compatibility.
 
 ## Installation
@@ -64,16 +69,23 @@ Screenshots will be added before the first public release.
    - `manifest.json`
    - `main.js`
    - `styles.css`
+   - `assets/icon.svg`
 2. Create this folder in your vault:
 
 ```text
 <vault>/.obsidian/plugins/metadata-visuals
 ```
 
-3. Put the three release files into that folder.
-4. In Obsidian, open Settings -> Community plugins.
-5. Reload plugins if needed.
-6. Enable `Metadata Visuals`.
+3. Put `manifest.json`, `main.js`, and `styles.css` into that folder.
+4. Create an `assets` folder inside the plugin folder and put `icon.svg` there:
+
+```text
+<vault>/.obsidian/plugins/metadata-visuals/assets/icon.svg
+```
+
+5. In Obsidian, open Settings -> Community plugins.
+6. Reload plugins if needed.
+7. Enable `Metadata Visuals`.
 
 ### Manual Testing From Source
 
@@ -93,14 +105,14 @@ For a complete walkthrough, see [USER_GUIDE.md](USER_GUIDE.md).
 1. Open Settings -> Metadata Visuals.
 2. In the Rules header, choose a metadata field from the `Select` field.
 3. Click `Add rule`.
-4. Metadata Visuals imports known field definitions if available, then creates one row for every known value for that field.
+4. Metadata Visuals automatically imports known field definitions if available, merges those values with values already used in notes, and creates one row for every known value for that field.
 
 Known values come from two places:
 
 - values imported into Metadata Visuals' own data file;
 - values already found in note frontmatter.
 
-If no external definitions are found, Metadata Visuals silently falls back to values found in notes.
+If no external definitions are found, Metadata Visuals silently falls back to values found in notes. The field selector starts on `Select`, and `Add rule` stays disabled until a real field is chosen.
 
 ### Configure Rule Rows
 
@@ -118,13 +130,13 @@ Columns:
 - `Preview`: live preview of the visual effect.
 - `Del`: delete that value row.
 
-Rows are generated from the field's available values. To change available values, update the source metadata definitions or add values to notes, then create the rule group again.
+Rows are generated from the field's available values. Values are read-only in the table so the stored frontmatter vocabulary remains deliberate. To change available values, update the source metadata definitions or add values to notes, then create or recreate the rule group.
 
 ### Choose The File Explorer Rule Group
 
 Only one metadata field group can control File Explorer note and folder visuals at a time.
 
-Turn on `Use for File Explorer` for the group that should drive icons and name colours. Enabling it for one group automatically makes that group the active File Explorer source.
+Turn on `Use for File Explorer` for the group that should drive icons and name colours. Enabling it for one group automatically makes that group the active File Explorer source. If no group has been selected in existing settings, Metadata Visuals migrates safely by preferring `Editing Status` when present, otherwise the first available group.
 
 Metadata/property colouring still uses all matching rule groups.
 
@@ -158,6 +170,8 @@ For Editing Status-style workflows, folder aggregation is:
 
 Folder-note/dashboard files that directly represent the folder are ignored so a folder status reflects descendant manuscript/project notes rather than the folder's own summary page.
 
+Smart folders update when note metadata changes, files are created, deleted, or renamed, and when the File Explorer is refreshed. Folder paths enabled from the context menu are stored internally; the settings page stays compact and only shows the per-field `Apply to enabled folders` toggle.
+
 ### Bulk Metadata Updates
 
 Metadata Visuals adds bulk update actions to File Explorer context menus:
@@ -177,7 +191,9 @@ Bulk updates support:
 - mixed note and folder selections;
 - overlapping folder selections without updating the same note twice.
 
-Selected folders update every descendant markdown note. Existing frontmatter is preserved, and missing frontmatter is created.
+Selected folders update every descendant markdown note. Existing frontmatter is preserved as YAML data, and missing frontmatter is created.
+
+The menu values come from the current rule rows, so `Apply Editing Status > Done` writes `Editing Status: Done`, not an icon, emoji, or preview label.
 
 ## Field Definition Import
 
@@ -189,7 +205,17 @@ The import is optional and one-time:
 - Metadata Visuals continues to work if the source plugin is disabled or removed;
 - no runtime dependency is created.
 
-The import helps with values that are configured but not yet used in any note.
+The import helps with values that are configured but not yet used in any note. It runs automatically in the background when the settings page opens and again before a new rule group is created.
+
+## Settings Footer
+
+The bottom of the settings page includes the official Metadata Visuals logo, the installed plugin version, author credit, and compact support links:
+
+- Report a bug: https://wolf359.app/metadata-visuals/report-bug/
+- Feature request: https://wolf359.app/metadata-visuals/request-feature/
+- Website: https://wolf359.app/
+- Wolf 359 Press: https://wolf359.press/
+- Buy me a coffee: https://buymeacoffee.com/wolf359pressab
 
 ## Compatibility
 
@@ -245,8 +271,9 @@ Before publishing a GitHub release:
 1. Run `npm run build`.
 2. Run `npm run lint`.
 3. Upload `manifest.json`, `main.js`, and `styles.css` as release assets.
-4. Confirm `manifest.json`, `versions.json`, and `package.json` versions match.
-5. Add screenshots to this README.
+4. Include `assets/icon.svg` in release packaging so the settings About section can show the official logo.
+5. Confirm `manifest.json`, `versions.json`, and `package.json` versions match.
+6. Add screenshots to this README.
 
 ## Roadmap
 
@@ -260,10 +287,11 @@ Before publishing a GitHub release:
 
 Report bugs and feature requests here:
 
-- Issues: https://github.com/anthony/obsidian-metadata-visuals/issues
-- Discussions: https://github.com/anthony/obsidian-metadata-visuals/discussions
+- Report a bug: https://wolf359.app/metadata-visuals/report-bug/
+- Feature request: https://wolf359.app/metadata-visuals/request-feature/
+- Documentation: https://wolf359.app/metadata-visuals/
 
-These links are placeholders until the public GitHub repository is created.
+The settings page includes the same links in the About / Support footer.
 
 ## License
 

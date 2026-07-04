@@ -16,11 +16,26 @@ Importance: Critical
 ---
 ```
 
-The plugin then displays configured colours and icons in the File Explorer, in folder rows, and in the visible note Properties panel.
+The plugin then displays configured colours and icons in the File Explorer, in folder rows, and in the visible note Properties panel. It can also bulk-update frontmatter values from the File Explorer context menu.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
 <strong>Screenshot 01 placeholder:</strong> Upload a high-level screenshot named <code>screenshots/metadata-visuals-overview.png</code>. It should show Obsidian with the File Explorer visible on the left, several notes using Metadata Visuals icons/coloured names, and an open note showing coloured Properties values at the top. Use a small sample vault with non-private note names so the screenshot is safe for public documentation.
 </div>
+
+## Installation
+
+For a manual test install, place these files in your vault plugin folder:
+
+```text
+<vault>/.obsidian/plugins/metadata-visuals/manifest.json
+<vault>/.obsidian/plugins/metadata-visuals/main.js
+<vault>/.obsidian/plugins/metadata-visuals/styles.css
+<vault>/.obsidian/plugins/metadata-visuals/assets/icon.svg
+```
+
+Then open Obsidian Settings -> Community plugins, reload plugins if needed, and enable Metadata Visuals.
+
+The plugin does not require Metadata Menu, Dataview, Iconize, Templater, internet access, or any runtime `node_modules` folder. Optional field-definition import is a one-time copy into Metadata Visuals' own settings.
 
 ## Core Concepts
 
@@ -63,6 +78,18 @@ The selected group is marked with `Use for File Explorer`.
 
 Metadata/property colouring is different: it can use all matching rule groups.
 
+### Known Values
+
+Metadata Visuals creates table rows from known values for a metadata field.
+
+Known values can come from:
+
+- imported field definitions copied into Metadata Visuals' own settings;
+- values already found in note frontmatter;
+- the built-in Editing Status defaults.
+
+When both imported values and used values exist, Metadata Visuals merges them, removes duplicates, normalises old emoji-prefixed values, and sorts common workflow values as `To Do`, `In Progress`, `Done` before sorting the remaining values alphabetically.
+
 ## First Setup
 
 1. Open Obsidian Settings.
@@ -72,7 +99,7 @@ Metadata/property colouring is different: it can use all matching rule groups.
 5. Review the generated rows.
 6. Choose the shape, colour, icon/name toggles, and target for each value.
 
-Metadata Visuals creates rows from available values for the selected field. It can use values already found in your notes and values imported from known field-definition sources.
+Metadata Visuals creates rows from available values for the selected field. It can use values already found in your notes and values imported from known field-definition sources. You do not need to run a separate import step before adding a rule group; Metadata Visuals imports known definitions automatically in the background before creating the rows.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
 <strong>Screenshot 02 placeholder:</strong> Upload a setup screenshot named <code>screenshots/settings-add-rule.png</code>. It should show Settings -&gt; Metadata Visuals with the Rules header visible, the <code>Colour note metadata</code> toggle, the <code>Select</code> field open or ready to select a metadata field, and the <code>Add rule</code> button. Capture the clean compact Add Rule area without private vault content.
@@ -82,15 +109,17 @@ Metadata Visuals creates rows from available values for the selected field. It c
 
 If no useful rules exist, Metadata Visuals creates three default rules:
 
-| Field | Value | Shape | Colour |
-| --- | --- | --- | --- |
-| Editing Status | To Do | circle | red |
-| Editing Status | In Progress | circle | orange |
-| Editing Status | Done | circle | green |
+| Field | Value | Shape | Colour | Icon | Name | Target |
+| --- | --- | --- | --- | --- | --- | --- |
+| Editing Status | To Do | circle | red | on | on | both |
+| Editing Status | In Progress | circle | orange | on | on | both |
+| Editing Status | Done | circle | green | on | on | both |
 
 These defaults store clean metadata values. Emoji are not stored in the rule value.
 
 Older notes that contain values such as `🔴 To Do`, `🟠 In Progress`, or `🟢 Done` still match because Metadata Visuals normalises leading status emoji before comparing values.
+
+The default values are also stored in Metadata Visuals' internal known-value registry so a fresh Editing Status group can regenerate the three rows even if the values are not yet used in notes.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
 <strong>Screenshot 03 placeholder:</strong> Upload a defaults screenshot named <code>screenshots/default-editing-status-rules.png</code>. It should show the expanded <code>Editing Status</code> rule group with the three default rows: <code>To Do</code>, <code>In Progress</code>, and <code>Done</code>. Make sure the Shape, Colour, Icon, Name, Target, Preview, and Delete columns are visible.
@@ -106,7 +135,7 @@ The top Rules area contains:
 
 The field selector starts blank. `Add rule` remains disabled until a real field is selected.
 
-When you click `Add rule`, Metadata Visuals first tries to import known field definitions in the background. If no definitions are found, it uses values already found in note frontmatter.
+When you click `Add rule`, Metadata Visuals first tries to import known field definitions in the background. If no definitions are found, it uses values already found in note frontmatter. If both imported values and used values exist, it includes both.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
 <strong>Screenshot 04 placeholder:</strong> Upload a field selector screenshot named <code>screenshots/add-rule-field-selector.png</code>. It should show the Add Rule <code>Select</code> input with the dropdown/list of available metadata fields visible. Include examples such as <code>Editing Status</code>, <code>Editing Stage</code>, and <code>Importance</code> if they are available in the sample vault.
@@ -127,6 +156,8 @@ Click the header to collapse or expand the group. Collapsed state is saved and r
 
 The metadata field name is read-only. Field selection happens only when creating a new rule group.
 
+There is no manual `Add row` or `Add missing rows` control. A group is generated from the available values for its field. If you need more rows, add or import the missing values and recreate the group.
+
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
 <strong>Screenshot 05 placeholder:</strong> Upload a collapsed-group screenshot named <code>screenshots/collapsed-rule-group.png</code>. It should show one collapsed rule group header with the chevron, bold metadata field name, label count, <code>Use for File Explorer</code>, <code>Apply to enabled folders</code>, and <code>Delete rule</code> button all visible in the same row.
 </div>
@@ -146,6 +177,10 @@ The metadata field name is read-only. Field selection happens only when creating
 | Del | Delete this row. |
 
 Rows are generated from known values for the field. You do not manually type values into the table.
+
+The Value column is read-only by design. This keeps visual configuration separate from the vocabulary used in your frontmatter. Delete a row if you do not want that value to create a visual label.
+
+Drag rows by the handle to change their order. The order is saved in plugin settings and restored after restart. Preview text wraps for long values so the table stays readable inside the settings pane.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
 <strong>Screenshot 06 placeholder:</strong> Upload a table screenshot named <code>screenshots/rule-table-expanded.png</code>. It should show an expanded rule group with several rows, including the Drag handle, read-only Value text, Shape dropdown, Colour picker, Icon checkbox, Name checkbox, Target dropdown, Preview, and row Delete button. Use at least one long value so readers can see text wrapping.
@@ -205,6 +240,8 @@ There are two steps:
 2. In settings, enable `Apply to enabled folders` for the rule group that should drive folder inheritance.
 
 Smart folder inheritance uses the active File Explorer rule group. This keeps folder visuals aligned with the same metadata workflow used for note rows.
+
+Smart folders refresh when descendant metadata changes, files are created, deleted, or renamed, and when the File Explorer refreshes. Enabled folder paths are controlled only from the folder context menu; the settings page stays clean and only stores the per-field `Apply to enabled folders` choice.
 
 ### Editing Status Aggregation
 
@@ -266,6 +303,14 @@ Metadata Visuals >
 
 Selecting a value writes that raw value into frontmatter.
 
+For example, `Apply Editing Status > Done` writes:
+
+```yaml
+Editing Status: Done
+```
+
+It does not write an emoji, icon name, colour, or preview label.
+
 Bulk updates support:
 
 - one selected note;
@@ -275,7 +320,7 @@ Bulk updates support:
 
 When a folder is selected, Metadata Visuals updates all descendant markdown notes. If selected folders overlap, each note is updated only once.
 
-Existing frontmatter is preserved. Notes without frontmatter receive a new frontmatter block.
+Existing frontmatter is preserved as YAML data. Notes without frontmatter receive a new frontmatter block.
 
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
 <strong>Screenshot 11 placeholder:</strong> Upload a bulk update screenshot named <code>screenshots/bulk-metadata-update-menu.png</code>. It should show a File Explorer context menu for selected notes and/or folders with <code>Metadata Visuals &gt; Apply Editing Status &gt; To Do / In Progress / Done</code> visible. Use sample notes/folders with non-private names.
@@ -294,8 +339,28 @@ This is a one-time copy:
 
 This is useful when a field has possible values that have not been used in any note yet.
 
+Import runs quietly when the settings page opens and again before a new rule group is created. If no supported definition file exists, Metadata Visuals falls back to values already used in notes. The plugin remains fully standalone after import because it stores imported values in its own `data.json`.
+
 <div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
 <strong>Screenshot 12 placeholder:</strong> Upload a field-import result screenshot named <code>screenshots/imported-field-values.png</code>. It should show a newly added rule group populated with values that came from imported field definitions, such as an <code>Editing Stage</code> group with many stage rows including values that are not currently used in notes.
+</div>
+
+## About And Support Footer
+
+The bottom of the settings page shows the official Metadata Visuals logo, the installed plugin version, creator credit, and support links.
+
+The footer buttons are:
+
+- Report a bug
+- Feature request
+- wolf359.app
+- Wolf 359 Press
+- Buy me a coffee
+
+`Buy me a coffee` is visually highlighted. All links open in the system browser.
+
+<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
+<strong>Screenshot 13 placeholder:</strong> Upload a footer screenshot named <code>screenshots/about-support-footer.png</code>. It should show the bottom of Settings -&gt; Metadata Visuals with the official logo, <code>Metadata Visuals</code> title, version number, <code>Created by Anthony Fitzpatrick</code>, <code>Wolf 359 Press AB</code>, and the five support buttons in this exact order: <code>Report a bug</code>, <code>Feature request</code>, <code>wolf359.app</code>, <code>Wolf 359 Press</code>, <code>Buy me a coffee</code>. Capture it in a clean theme where the logo and buttons are readable.
 </div>
 
 ## Value Normalisation
