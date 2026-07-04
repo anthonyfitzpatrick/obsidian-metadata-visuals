@@ -182,9 +182,9 @@ The Value column is read-only by design. This keeps visual configuration separat
 
 Drag rows by the handle to change their order. The order is saved in plugin settings and restored after restart. Preview text wraps for long values so the table stays readable inside the settings pane.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 06 placeholder:</strong> Upload a table screenshot named <code>screenshots/rule-table-expanded.png</code>. It should show an expanded rule group with several rows, including the Drag handle, read-only Value text, Shape dropdown, Colour picker, Icon checkbox, Name checkbox, Target dropdown, Preview, and row Delete button. Use at least one long value so readers can see text wrapping.
-</div>
+<p align="center">
+  <img src="screenshots/rule-table-expanded.png" alt="Expanded Metadata Visuals rule table showing drag handles, values, shape controls, colours, toggles, targets, previews, and delete buttons." width="760">
+</p>
 
 ## File Explorer Labels
 
