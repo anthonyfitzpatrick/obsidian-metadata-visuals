@@ -14,6 +14,8 @@ Importance: Critical
 
 The plugin then displays configured colours and icons in the File Explorer, in folder rows, and in the visible note Properties panel.
 
+> Screenshot placeholder: Upload a high-level screenshot named `screenshots/metadata-labels-overview.png`. It should show Obsidian with the File Explorer visible on the left, several notes using Metadata Labels icons/coloured names, and an open note showing coloured Properties values at the top. Use a small sample vault with non-private note names so the screenshot is safe for public documentation.
+
 ## Core Concepts
 
 ### Metadata Field
@@ -66,6 +68,8 @@ Metadata/property colouring is different: it can use all matching rule groups.
 
 Metadata Labels creates rows from available values for the selected field. It can use values already found in your notes and values imported from known field-definition sources.
 
+> Screenshot placeholder: Upload a setup screenshot named `screenshots/settings-add-rule.png`. It should show Settings -> Metadata Labels with the Rules header visible, the `Colour note metadata` toggle, the `Select` field open or ready to select a metadata field, and the `Add rule` button. Capture the clean compact Add Rule area without private vault content.
+
 ## Default Editing Status Rules
 
 If no useful rules exist, Metadata Labels creates three default rules:
@@ -80,6 +84,8 @@ These defaults store clean metadata values. Emoji are not stored in the rule val
 
 Older notes that contain values such as `🔴 To Do`, `🟠 In Progress`, or `🟢 Done` still match because Metadata Labels normalises leading status emoji before comparing values.
 
+> Screenshot placeholder: Upload a defaults screenshot named `screenshots/default-editing-status-rules.png`. It should show the expanded `Editing Status` rule group with the three default rows: `To Do`, `In Progress`, and `Done`. Make sure the Shape, Colour, Icon, Name, Target, Preview, and Delete columns are visible.
+
 ## The Rules Header
 
 The top Rules area contains:
@@ -91,6 +97,8 @@ The top Rules area contains:
 The field selector starts blank. `Add rule` remains disabled until a real field is selected.
 
 When you click `Add rule`, Metadata Labels first tries to import known field definitions in the background. If no definitions are found, it uses values already found in note frontmatter.
+
+> Screenshot placeholder: Upload a field selector screenshot named `screenshots/add-rule-field-selector.png`. It should show the Add Rule `Select` input with the dropdown/list of available metadata fields visible. Include examples such as `Editing Status`, `Editing Stage`, and `Importance` if they are available in the sample vault.
 
 ## Rule Group Header
 
@@ -107,6 +115,8 @@ Click the header to collapse or expand the group. Collapsed state is saved and r
 
 The metadata field name is read-only. Field selection happens only when creating a new rule group.
 
+> Screenshot placeholder: Upload a collapsed-group screenshot named `screenshots/collapsed-rule-group.png`. It should show one collapsed rule group header with the chevron, bold metadata field name, label count, `Use for File Explorer`, `Apply to enabled folders`, and `Delete rule` button all visible in the same row.
+
 ## Rule Table Columns
 
 | Column | Meaning |
@@ -122,6 +132,8 @@ The metadata field name is read-only. Field selection happens only when creating
 | Del | Delete this row. |
 
 Rows are generated from known values for the field. You do not manually type values into the table.
+
+> Screenshot placeholder: Upload a table screenshot named `screenshots/rule-table-expanded.png`. It should show an expanded rule group with several rows, including the Drag handle, read-only Value text, Shape dropdown, Colour picker, Icon checkbox, Name checkbox, Target dropdown, Preview, and row Delete button. Use at least one long value so readers can see text wrapping.
 
 ## File Explorer Labels
 
@@ -141,6 +153,8 @@ For each matching note:
 
 Rule order matters within the selected group. The first matching rule wins.
 
+> Screenshot placeholder: Upload a File Explorer screenshot named `screenshots/file-explorer-labels.png`. It should show note rows with Metadata Labels icons and/or coloured note names. Include at least three notes representing different values, such as `To Do`, `In Progress`, and `Done`, so the colour differences are clear.
+
 ## Note Properties Colouring
 
 The `Colour note metadata` toggle controls colouring in the visible note Properties panel.
@@ -158,6 +172,8 @@ Example:
 This feature does not depend on `Use for File Explorer`. A group can colour Properties values even if another group controls the File Explorer.
 
 If you turn `Colour note metadata` off, Metadata Labels removes its injected property colours.
+
+> Screenshot placeholder: Upload a Properties screenshot named `screenshots/coloured-note-properties.png`. It should show an open note with the Properties panel visible and multiple coloured values, for example `Editing Status: To Do`, `Editing Stage: Published`, and `Importance: Critical`. The File Explorer can be visible too, but the coloured Properties values should be the focus.
 
 ## Smart Folders
 
@@ -186,6 +202,8 @@ Aggregation:
 
 The folder then uses the matching rule's shape, colour, icon toggle, name toggle, and target setting.
 
+> Screenshot placeholder: Upload a smart folder screenshot named `screenshots/smart-folder-inheritance.png`. It should show a folder row in the File Explorer inheriting an icon or coloured name from descendant notes. Ideally include the expanded folder contents below it so readers can see child notes with statuses that explain the inherited folder state.
+
 ## Folder Context Menu
 
 Right-click a folder in the File Explorer.
@@ -205,6 +223,8 @@ Metadata Labels >
 ```
 
 Disabling a smart folder immediately removes its injected styling.
+
+> Screenshot placeholder: Upload a folder context-menu screenshot named `screenshots/folder-context-menu.png`. It should show a File Explorer folder right-click menu with the `Metadata Labels` submenu open and either `Enable smart folder rule` or `Disable smart folder rule` visible.
 
 ## Bulk Metadata Updates
 
@@ -233,6 +253,8 @@ When a folder is selected, Metadata Labels updates all descendant markdown notes
 
 Existing frontmatter is preserved. Notes without frontmatter receive a new frontmatter block.
 
+> Screenshot placeholder: Upload a bulk update screenshot named `screenshots/bulk-metadata-update-menu.png`. It should show a File Explorer context menu for selected notes and/or folders with `Metadata Labels > Apply Editing Status > To Do / In Progress / Done` visible. Use sample notes/folders with non-private names.
+
 ## Field Definition Import
 
 Metadata Labels can import configured possible values from known local sources. Currently, it can read Metadata Menu's local `data.json` if it exists.
@@ -245,6 +267,8 @@ This is a one-time copy:
 - If Metadata Menu is removed later, imported values remain available.
 
 This is useful when a field has possible values that have not been used in any note yet.
+
+> Screenshot placeholder: Upload a field-import result screenshot named `screenshots/imported-field-values.png`. It should show a newly added rule group populated with values that came from imported field definitions, such as an `Editing Stage` group with many stage rows including values that are not currently used in notes.
 
 ## Value Normalisation
 
