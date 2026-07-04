@@ -101,9 +101,9 @@ When both imported values and used values exist, Metadata Visuals merges them, r
 
 Metadata Visuals creates rows from available values for the selected field. It can use values already found in your notes and values imported from known field-definition sources. You do not need to run a separate import step before adding a rule group; Metadata Visuals imports known definitions automatically in the background before creating the rows.
 
-<div style="color: #d22; border-left: 4px solid #d22; padding-left: 0.75rem;">
-<strong>Screenshot 02 placeholder:</strong> Upload a setup screenshot named <code>screenshots/settings-add-rule.png</code>. It should show Settings -&gt; Metadata Visuals with the Rules header visible, the <code>Colour note metadata</code> toggle, the <code>Select</code> field open or ready to select a metadata field, and the <code>Add rule</code> button. Capture the clean compact Add Rule area without private vault content.
-</div>
+<p align="center">
+  <img src="screenshots/settings-add-rule.png" alt="Metadata Visuals settings showing the compact Rules header with Colour note metadata, field selector, and Add rule button." width="760">
+</p>
 
 ## Default Editing Status Rules
 
