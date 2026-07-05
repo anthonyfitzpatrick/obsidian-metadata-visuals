@@ -1,9 +1,9 @@
 {
 	"id": "metadata-visuals",
 	"name": "Metadata Visuals",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"minAppVersion": "1.12.7",
-	"description": "A metadata-driven visual engine for Obsidian.",
+	"description": "Metadata-driven labels, colours, icons, smart folders, bulk updates and workflow visualisation.",
 	"author": "Anthony Fitzpatrick",
 	"isDesktopOnly": false,
 	"fundingUrl": "https://buymeacoffee.com/wolf359pressab"
