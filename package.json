@@ -1,6 +1,6 @@
 {
 	"name": "metadata-visuals",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "A metadata-driven visual engine for Obsidian.",
 	"homepage": "https://github.com/anthonyfitzpatrick/obsidian-metadata-visuals#readme",
 	"repository": {
